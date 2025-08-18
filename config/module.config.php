@@ -27,8 +27,12 @@ return [
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
     ],
-    // Because translator is used by module Laminas, Internationalisation,
-    // merge them below.
+    /**
+     * Because the key "translator" is used by module Laminas I18n, merge
+     * options below. The sub-keys are not the same, so there is no issue.
+     * @see \Laminas\I18n\ConfigProvider
+     * @see \Laminas\I18n\Translator\LoaderPluginManagerFactory
+     */
     'translator' => [
         // Library Laminas I18n.
         'translation_file_patterns' => [

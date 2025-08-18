@@ -176,16 +176,12 @@ class Module extends AbstractModule
             'extracttext:extracted_text',
         ]);
 
-        $mainLocale = $settings->get('locale', 'en-US');
+        $mainLocale = $settings->get('locale') ?: $services->get('Config')['translator']['locale'] ?: 'en_US';
         if (!$mainLocale) {
             return;
         }
 
-        $mainLocale = strtr($mainLocale, '_', '-');
-        $pos = strpos($mainLocale, '-');
-        $mainLocale = $pos
-            ? mb_substr(mb_strtolower($mainLocale), 0, $pos) . '-' . mb_substr(mb_strtolower($mainLocale), $pos + 1)
-            : mb_strtolower($mainLocale);
+        $mainLocale = mb_strtolower(strtr($mainLocale, '_', '-'));
         // Don't set default language by default, because the user may prefer
         // "skip" or "auto" (auto by default).
         // $settings->set('translator_lang_source_default', $mainLocale);
@@ -194,11 +190,8 @@ class Module extends AbstractModule
         $pairs = [];
         foreach ($siteIds as $siteId) {
             $siteSettings->setTargetId($siteId);
-            $siteLocale = strtr((string) $siteSettings->get('locale', $mainLocale ?: 'en-US'), '_', '-');
-            $pos = strpos($siteLocale, '-');
-            $siteLocale = $pos
-                ? mb_substr(mb_strtolower($siteLocale), 0, $pos) . '-' . mb_substr(mb_strtolower($siteLocale), $pos + 1)
-                : mb_strtolower($siteLocale);
+            $siteLocale = $siteSettings->get('locale');
+            $siteLocale = $siteLocale ? mb_strtolower(strtr($siteLocale, '_', '-')) : null;
             if ($siteLocale && $siteLocale !== $mainLocale) {
                 // Pairs cannot be assocative, because main locale is multiple.
                 $pairs[] = "$mainLocale = $siteLocale";
@@ -527,7 +520,7 @@ class Module extends AbstractModule
 
         // The external service supports only 2-letter codes on input.
         $langSource = $langSource
-            ? mb_strtolower(strtok(strtr($langSource, '_', '-'), '-'))
+            ? mb_strtolower((string) strtok(strtr($langSource, '_', '-'), '-'))
             : null;
 
         // TODO Update view helper Translation.
@@ -784,7 +777,7 @@ class Module extends AbstractModule
             $lang = (string) $value->lang();
             // Lang codes for values use "-", not "_".
             // For deepl, the input is always without regionalization.
-            $langCode = mb_strtolower(strtok($lang, '-'));
+            $langCode = mb_strtolower((string) strtok($lang, '-'));
             // Check exclusion first.
             if (!$val
                 || is_numeric($val)
@@ -856,7 +849,7 @@ class Module extends AbstractModule
         $result = [];
         $errors = [];
         foreach ($pairs as $singleOrPair) {
-            $r = array_map('trim', array_filter(explode('=', $singleOrPair)));
+            $r = array_values(array_map('trim', array_filter(explode('=', $singleOrPair))));
             if ($r) {
                 $langSource = count($r) === 1 ? null : (strtr(mb_strtolower($r[0]), '_', '-') ?: null);
                 $langTarget = strtr(mb_strtolower(count($r) === 1 ? $r[0] : $r[1]), '_', '-');
@@ -1025,7 +1018,8 @@ class Module extends AbstractModule
 
         $siteIds = $api->search('sites', [], ['returnScalar' => 'id'])->getContent();
         foreach ($siteIds as $siteId) {
-            $siteLocale = mb_strtolower(strtr((string) $siteSettings->get('locale', null, $siteId))) ?: $mainLocale;
+            $siteLocale = $siteSettings->get('locale', null, $siteId);
+            $siteLocale = $siteLocale ? mb_strtolower(strtr($siteLocale, '_', '-')) : $mainLocale;
             $siteLocaleShort = strtok($siteLocale, '-');
 
             // Prepare pairs of languages.
@@ -1201,7 +1195,7 @@ class Module extends AbstractModule
         $type = (string) $value->type();
         $lang = (string) $value->lang();
         // For deepl, the input is always without regionalization.
-        $langCode = mb_strtolower(strtok($lang, '-'));
+        $langCode = mb_strtolower((string) strtok($lang, '-'));
         if (!$val
             || is_numeric($val)
             || $value->valueResource()

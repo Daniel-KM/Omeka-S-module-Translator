@@ -11,10 +11,10 @@ class SettingsFieldset extends Fieldset
     /**
      * @var string
      */
-    protected $label = 'Translate'; // @translate
+    protected $label = 'Internationalisation: Resources'; // @translate
 
     protected $elementGroups = [
-        'translator' => 'Translate', // @translate
+        'internationalisation_resources' => 'Internationalisation: resources', // @translate
     ];
 
     public function init(): void
@@ -27,7 +27,7 @@ class SettingsFieldset extends Fieldset
                 'name' => 'translator_lang_source_default',
                 'type' => CommonElement\OptionalSelect::class,
                 'options' => [
-                    'element_group' => 'translator',
+                    'element_group' => 'internationalisation_resources',
                     'label' => 'Default language for values without any one', // @translate
                     'info' => 'The language should be a 2-letter iso code (ISO 3166-1) supported by the translation service.', // @translate
                     'documentation' => 'https://developers.deepl.com/docs/getting-started/supported-languages',
@@ -47,7 +47,7 @@ class SettingsFieldset extends Fieldset
                 'name' => 'translator_lang_pairs',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
-                    'element_group' => 'translator',
+                    'element_group' => 'internationalisation_resources',
                     'label' => 'Target languages or pairs of languages to translate', // @translate
                     'info' => 'The source language will be automatically defined when not set. For pairs, separate source and target with a "=", one by line. The source language should be a 2-letter iso code (ISO 3166-1) supported by the translation service. The target language may have the localization code if supported.', // @translate
                     'documentation' => 'https://developers.deepl.com/docs/getting-started/supported-languages',
@@ -58,6 +58,7 @@ class SettingsFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'translator_lang_pairs',
                     'required' => false,
+                    'rows' => 5,
                     'placeholder' => <<<'TXT'
                         de
                         en-gb
@@ -70,7 +71,7 @@ class SettingsFieldset extends Fieldset
                 'name' => 'translator_properties_include',
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
-                    'element_group' => 'translator',
+                    'element_group' => 'internationalisation_resources',
                     'label' => 'Properties to translate', // @translate
                     'info' => 'Only literal data are translated, not numeric values, resources, uri, or other data. It is recommended to remove big fields from the list of properties, in particular extracted text.', // @translate
                     'empty_option' => 'All', // @translate
@@ -101,7 +102,7 @@ class SettingsFieldset extends Fieldset
                 'name' => 'translator_properties_exclude',
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
-                    'element_group' => 'translator',
+                    'element_group' => 'internationalisation_resources',
                     'label' => 'Properties not to translate', // @translate
                     'empty_option' => '',
                     'prepend_value_options' => [
