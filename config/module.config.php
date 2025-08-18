@@ -5,7 +5,7 @@ namespace Translate;
 return [
     'api_adapters' => [
         'invokables' => [
-            'translations' => Api\Adapter\TranslationAdapter::class,
+            'translates' => Api\Adapter\TranslateAdapter::class,
         ],
     ],
     'entity_manager' => [
@@ -23,12 +23,12 @@ return [
     ],
     'view_helpers' => [
         'invokables' => [
-            'translation' => View\Helper\Translation::class,
+            'translating' => View\Helper\Translating::class,
         ],
     ],
     'form_elements' => [
         'invokables' => [
-            Form\TranslationForm::class => Form\TranslationForm::class,
+            Form\TranslateForm::class => Form\TranslateForm::class,
         ],
     ],
     'controllers' => [
@@ -40,35 +40,55 @@ return [
         'routes' => [
             'admin' => [
                 'child_routes' => [
-                    'translation' => [
-                        'type' => \Laminas\Router\Http\Segment::class,
+                    'translate' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
-                            'route' => '/translation[/:action]',
-                            'constraints' => [
-                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                            ],
+                            'route' => '/translate',
                             'defaults' => [
                                 '__NAMESPACE__' => 'Translate\Controller\Admin',
                                 'controller' => Controller\Admin\IndexController::class,
                                 'action' => 'browse',
                             ],
                         ],
-                    ],
-                    'translation-id' => [
-                        'type' => \Laminas\Router\Http\Segment::class,
-                        'options' => [
-                            'route' => '/translation/:id[/:action]',
-                            'constraints' => [
-                                // The slug may be an id or a slug. A slug should never be fully numeric.
-                                'slug' => '[a-z0-9_-]+',
-                                'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        'may_terminate' => true,
+                        'child_routes' => [
+                            'default' => [
+                                'type' => \Laminas\Router\Http\Segment::class,
+                                'options' => [
+                                    'route' => '/:action',
+                                    'constraints' => [
+                                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                    ],
+                                    'defaults' => [
+                                        'action' => 'browse',
+                                    ],
+                                ],
                             ],
-                            'defaults' => [
-                                '__NAMESPACE__' => 'Translate\Controller\Admin',
-                                'controller' => Controller\Admin\IndexController::class,
-                                'action' => 'show',
+                            'id' => [
+                                'type' => \Laminas\Router\Http\Segment::class,
+                                'options' => [
+                                    'route' => '/:language[/:action]',
+                                    'constraints' => [
+                                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                        // The language tag follows the BCP47 specification
+                                        // according to the list of languages supported by Omeka.
+                                        // The recommandation allows 7 subtags of 1 to 8 characters
+                                        // separated with a "-". Each subtag should be listed in
+                                        // the recommandation. The case should follow the
+                                        // recommandation.
+                                        // The separator should be a "-", but laminas uses "_".
+                                        /** @see https://en.wikipedia.org/wiki/IETF_language_tag */
+                                        // 'locale' => '[a-zA-Z]{1,8}((-|_)[a-zA-Z0-9]{1,8}){0,6}',
+                                        // This is a locale for pages, not resources, where another pattern is used.
+                                        // See application/asset/js/global.js.
+                                        'language' => '[a-zA-Z]{2,3}((-|_)[a-zA-Z0-9]{2,4})?',
+                                    ],
+                                    'defaults' => [
+                                        'action' => 'show',
+                                    ],
+                                ],
                             ],
-                        ],
+                        ]
                     ],
                 ],
             ],
@@ -76,19 +96,21 @@ return [
     ],
     'column_defaults' => [
         'admin' => [
-            'translations' => [
-                ['type' => 'string'],
-                ['type' => 'lang'],
-                ['type' => 'translation'],
-                ['type' => 'locale'],
+            'translates' => [
+                ['type' => 'lang_source'],
+                ['type' => 'lang_target'],
                 ['type' => 'automatic'],
                 ['type' => 'reviewed'],
+                ['type' => 'string'],
+                ['type' => 'translation'],
+                ['type' => 'created'],
+                ['type' => 'modified'],
             ],
         ],
     ],
     'browse_defaults' => [
         'admin' => [
-            'translations' => [
+            'translates' => [
                 'sort_by' => 'string',
                 'sort_order' => 'asc',
             ],
@@ -96,13 +118,15 @@ return [
     ],
     'sort_defaults' => [
         'admin' => [
-            'translations' => [
-                'string' => 'String', // @translate
-                'lang' => 'Language', // @translate
-                'translation' => 'Translation', // @translate
-                'locale' => 'Locale', // @translate
+            'translates' => [
+                'lang_source' => 'Language source', // @translate
+                'lang_target' => 'Language target', // @translate
                 'automatic' => 'Automatic', // @translate
                 'reviewed' => 'Reviewed', // @translate
+                'string' => 'String', // @translate
+                'translation' => 'Translation', // @translate
+                'created' => 'Created', // @translate
+                'modified' => 'Modified', // @translate
             ],
         ],
     ],
@@ -118,9 +142,9 @@ return [
     ],
     'navigation' => [
         'AdminModule' => [
-            'translation' => [
-                'label' => 'Translations', // @translate
-                'route' => 'admin/translation',
+            'translate' => [
+                'label' => 'Translate', // @translate
+                'route' => 'admin/translate',
                 'resource' => Controller\Admin\IndexController::class,
                 'privilege' => 'browse',
                 'class' => 'o-icon- fa-language',

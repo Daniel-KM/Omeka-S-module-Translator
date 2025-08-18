@@ -6,8 +6,8 @@ use Common\Stdlib\PsrMessage;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Form\ConfirmForm;
-use Translate\Api\Representation\TranslationRepresentation;
-use Translate\Form\TranslationForm;
+use Translate\Api\Representation\TranslateRepresentation;
+use Translate\Form\TranslateForm;
 
 /**
  * Adapted from Omeka controllers.
@@ -23,8 +23,8 @@ class IndexController extends AbstractActionController
 
     public function browseAction()
     {
-        $this->browse()->setDefaults('translations');
-        $response = $this->api()->search('translations', $this->params()->fromQuery());
+        $this->browse()->setDefaults('translates');
+        $response = $this->api()->search('translates', $this->params()->fromQuery());
         $this->paginator($response->getTotalResults());
 
         // Set the return query for batch actions. Note that we remove the page
@@ -44,11 +44,11 @@ class IndexController extends AbstractActionController
         $formDeleteAll->setAttribute('id', 'confirm-delete-all');
         $formDeleteAll->get('submit')->setAttribute('disabled', true);
 
-        $translations = $response->getContent();
+        $translates= $response->getContent();
 
         return new ViewModel([
-            'translations' => $translations,
-            'resources' => $translations,
+            'translates' => $translates,
+            'resources' => $translates,
             'formDeleteSelected' => $formDeleteSelected,
             'formDeleteAll' => $formDeleteAll,
             'returnQuery' => $returnQuery,
@@ -57,22 +57,22 @@ class IndexController extends AbstractActionController
 
     public function showAction()
     {
-        $translation = $this->getTranslationFromRoute();
+        $translate = $this->getTranslateFromRoute();
         return new ViewModel([
-            'translation' => $translation,
-            'resource' => $translation,
+            'translate' => $translate,
+            'resource' => $translate,
         ]);
     }
 
     public function showDetailsAction()
     {
-        $translation = $this->getTranslationFromRoute();
+        $translate = $this->getTranslateFromRoute();
 
         $linkTitle = (bool) $this->params()->fromQuery('link-title', true);
 
         $view = new ViewModel([
-            'translation' => $translation,
-            'resource' => $translation,
+            'translate' => $translate,
+            'resource' => $translate,
             'linkTitle' => $linkTitle,
         ]);
         $view->setTerminal(true);
@@ -81,22 +81,22 @@ class IndexController extends AbstractActionController
 
     public function addAction()
     {
-        /** @var \Translate\Form\TranslationForm $form */
-        $form = $this->getForm(TranslationForm::class);
+        /** @var \Translate\Form\TranslateForm $form */
+        $form = $this->getForm(TranslateForm::class);
         $form
             ->setAttribute('action', $this->url()->fromRoute(null, [], true))
             ->setAttribute('enctype', 'multipart/form-data')
-            ->setAttribute('id', 'add-translation');
+            ->setAttribute('id', 'add-translate');
 
         if ($this->getRequest()->isPost()) {
             $post = $this->params()->fromPost();
             $form->setData($post);
             if ($form->isValid()) {
                 $data = $form->getData();
-                $response = $this->api($form)->create('translations', $data);
+                $response = $this->api($form)->create('translates', $data);
                 if ($response) {
-                    /** @var \Translate\Api\Representation\TranslationRepresentation $translation */
-                    $translation = $response->getContent();
+                    /** @var \Translate\Api\Representation\TranslateRepresentation $translate */
+                    $translate = $response->getContent();
                     $message = new PsrMessage(
                         'Translation successfully created. {link}Add another translation?{link_end}', // @translate
                         [
@@ -106,7 +106,7 @@ class IndexController extends AbstractActionController
                     );
                     $message->setEscapeHtml(false);
                     $this->messenger()->addSuccess($message);
-                    return $this->redirect()->toUrl($translation->url());
+                    return $this->redirect()->toUrl($translate->url());
                 }
             } else {
                 $this->messenger()->addFormErrors($form);
@@ -120,15 +120,15 @@ class IndexController extends AbstractActionController
 
     public function editAction()
     {
-        $translation = $this->getTranslationFromRoute();
-        $data = $translation->jsonSerialize();
+        $translate = $this->getTranslateFromRoute();
+        $data = $translate->jsonSerialize();
 
-        /** @var \Translate\Form\TranslationForm $form */
-        $form = $this->getForm(TranslationForm::class);
+        /** @var \Translate\Form\TranslateForm $form */
+        $form = $this->getForm(TranslateForm::class);
         $form
             ->setAttribute('action', $this->url()->fromRoute(null, [], true))
             ->setAttribute('enctype', 'multipart/form-data')
-            ->setAttribute('id', 'edit-translation')
+            ->setAttribute('id', 'edit-translate')
             ->setData($data)
         ;
 
@@ -137,11 +137,11 @@ class IndexController extends AbstractActionController
             $form->setData($post);
             if ($form->isValid()) {
                 $data = $form->getData();
-                $response = $this->api($form)->update('translations', ['id' => $translation->id()], $data);
+                $response = $this->api($form)->update('translates', ['id' => $translate->id()], $data);
                 if ($response) {
-                    $translation = $response->getContent();
+                    $translate = $response->getContent();
                     $this->messenger()->addSuccess('Translation successfully updated.'); // @translate
-                    return $this->redirect()->toUrl($translation->url());
+                    return $this->redirect()->toUrl($translate->url());
                 }
             } else {
                 $this->messenger()->addFormErrors($form);
@@ -150,20 +150,20 @@ class IndexController extends AbstractActionController
 
         return new ViewModel([
             'form' => $form,
-            'translation' => $translation,
-            'resource' => $translation,
+            'translate' => $translate,
+            'resource' => $translate,
         ]);
     }
 
     public function deleteConfirmAction()
     {
-        $translation = $this->getTranslationFromRoute();
+        $translate = $this->getTranslateFromRoute();
 
         $linkTitle = (bool) $this->params()->fromQuery('link-title', true);
 
         $view = new ViewModel([
-            'translation' => $translation,
-            'resource' => $translation,
+            'translate' => $translate,
+            'resource' => $translate,
             'linkTitle' => $linkTitle,
             'resourceLabel' => 'translation', // @translate
             'partialPath' => 'translate/admin/index/show-details',
@@ -181,7 +181,7 @@ class IndexController extends AbstractActionController
             $form->setData($this->getRequest()->getPost());
             if ($form->isValid()) {
                 $slug = $this->params('slug');
-                $response = $this->api($form)->delete('translations', is_numeric($slug) ? ['id' => $slug] : ['slug' => $slug]);
+                $response = $this->api($form)->delete('translates', is_numeric($slug) ? ['id' => $slug] : ['slug' => $slug]);
                 if ($response) {
                     $this->messenger()->addSuccess('Translation successfully deleted.'); // @translate
                 }
@@ -190,7 +190,7 @@ class IndexController extends AbstractActionController
             }
         }
         return $this->redirect()->toRoute(
-            'admin/translation',
+            'admin/translate',
             ['action' => 'browse'],
             true
         );
@@ -199,33 +199,33 @@ class IndexController extends AbstractActionController
     public function batchDeleteAction()
     {
         if (!$this->getRequest()->isPost()) {
-            return $this->redirect()->toRoute('admin/translation', ['action' => 'browse'], true);
+            return $this->redirect()->toRoute('admin/translate', ['action' => 'browse'], true);
         }
 
         $returnQuery = $this->params()->fromQuery();
         $resourceIds = $this->params()->fromPost('resource_ids', []);
         if (!$resourceIds) {
             $this->messenger()->addError('You must select at least one translation to batch delete.'); // @translate
-            return $this->redirect()->toRoute('admin/translation', ['action' => 'browse'], ['query' => $returnQuery], true);
+            return $this->redirect()->toRoute('admin/translate', ['action' => 'browse'], ['query' => $returnQuery], true);
         }
 
         $form = $this->getForm(ConfirmForm::class);
         $form->setData($this->getRequest()->getPost());
         if ($form->isValid()) {
-            $response = $this->api($form)->batchDelete('translations', $resourceIds, [], ['continueOnError' => true]);
+            $response = $this->api($form)->batchDelete('translates', $resourceIds, [], ['continueOnError' => true]);
             if ($response) {
                 $this->messenger()->addSuccess('Translations successfully deleted.'); // @translate
             }
         } else {
             $this->messenger()->addFormErrors($form);
         }
-        return $this->redirect()->toRoute('admin/translations', ['action' => 'browse'], ['query' => $returnQuery], true);
+        return $this->redirect()->toRoute('admin/translate', ['action' => 'browse'], ['query' => $returnQuery], true);
     }
 
     public function batchDeleteAllAction()
     {
         if (!$this->getRequest()->isPost()) {
-            return $this->redirect()->toRoute('admin/translation', ['action' => 'browse'], true);
+            return $this->redirect()->toRoute('admin/translate', ['action' => 'browse'], true);
         }
 
         // Derive the query, removing limiting and sorting params.
@@ -237,7 +237,7 @@ class IndexController extends AbstractActionController
         $form->setData($this->getRequest()->getPost());
         if ($form->isValid()) {
             $job = $this->jobDispatcher()->dispatch(\Omeka\Job\BatchDelete::class, [
-                'resource' => 'translations',
+                'resource' => 'translates',
                 'query' => $query,
             ]);
             $urlPlugin = $this->url();
@@ -260,16 +260,16 @@ class IndexController extends AbstractActionController
         } else {
             $this->messenger()->addFormErrors($form);
         }
-        return $this->redirect()->toRoute('admin/translation', ['action' => 'browse'], ['query' => $this->params()->fromQuery()], true);
+        return $this->redirect()->toRoute('admin/translate', ['action' => 'browse'], ['query' => $this->params()->fromQuery()], true);
     }
 
     /**
      * @throws \Omeka\Api\Exception\NotFoundException
      */
-    protected function getTranslationFromRoute(): TranslationRepresentation
+    protected function getTranslateFromRoute(): TranslateRepresentation
     {
         $id = $this->params('id');
-        $response = $this->api()->read('translations', ['id' => $id]);
+        $response = $this->api()->read('translates', ['id' => $id]);
         return $response->getContent();
     }
 }

@@ -1,10 +1,12 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translate\Api\Representation\TranslationRepresentation $translation
- * @var \Translate\Api\Representation\TranslationRepresentation $resource
+ * @var \Translate\Api\Representation\TranslateRepresentation $translate
+ * @var \Translate\Api\Representation\TranslateRepresentation $resource
  * @var bool $linkTitle
  */
+
+$translation = $translate;
 
 $plugins = $this->getHelperPluginManager();
 $i18n = $plugins->get('i18n');

@@ -1,7 +1,7 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translate\Form\TranslationForm $form
+ * @var \Translate\Form\TranslateForm $form
  */
 
 $plugins = $this->getHelperPluginManager();
@@ -20,7 +20,7 @@ $this->headLink()
 
 <?= $this->partial('translate/admin/index/form', [
     'form' => $form,
-    'translation' => null,
+    'translate' => null,
     'resource' => null,
     'action' => 'add',
     'submitLabel' => $translate('Add'),

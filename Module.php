@@ -33,7 +33,7 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [
-                    \Translate\Api\Adapter\TranslationAdapter::class,
+                    \Translate\Api\Adapter\TranslateAdapter::class,
                 ],
                 [
                     'search',
@@ -43,7 +43,7 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [
-                    \Translate\Entity\Translation::class,
+                    \Translate\Entity\Translate::class,
                 ],
                 [
                     'read',
@@ -73,7 +73,7 @@ class Module extends AbstractModule
                     $acl::ROLE_REVIEWER,
                 ],
                 [
-                    \Translate\Controller\Admin\TranslationController::class,
+                    \Translate\Controller\Admin\IndexController::class,
                 ],
                 [
                     'add',
@@ -90,7 +90,7 @@ class Module extends AbstractModule
                     $acl::ROLE_REVIEWER,
                 ],
                 [
-                    \Translate\Api\Adapter\TranslationAdapter::class,
+                    \Translate\Api\Adapter\TranslateAdapter::class,
                 ],
                 [
                     'create',
@@ -106,7 +106,7 @@ class Module extends AbstractModule
                     $acl::ROLE_REVIEWER,
                 ],
                 [
-                    \Translate\Entity\Translation::class,
+                    \Translate\Entity\Translate::class,
                 ],
                 [
                     'read',
@@ -118,7 +118,7 @@ class Module extends AbstractModule
                     $acl::ROLE_AUTHOR,
                 ],
                 [
-                    \Translate\Entity\Translation::class,
+                    \Translate\Entity\Translate::class,
                 ],
                 [
                     'update',
@@ -131,7 +131,7 @@ class Module extends AbstractModule
                     $acl::ROLE_REVIEWER,
                 ],
                 [
-                    \Translate\Entity\Translation::class,
+                    \Translate\Entity\Translate::class,
                 ],
                 [
                     'update',
@@ -142,7 +142,7 @@ class Module extends AbstractModule
                     $acl::ROLE_REVIEWER,
                 ],
                 [
-                    \Translate\Entity\Translation::class,
+                    \Translate\Entity\Translate::class,
                 ],
                 [
                     'delete',
@@ -158,8 +158,8 @@ class Module extends AbstractModule
                     $acl::ROLE_GLOBAL_ADMIN,
                 ],
                 [
-                    \Translate\Api\Adapter\TranslationAdapter::class,
-                    \Translate\Entity\Translation::class,
+                    \Translate\Api\Adapter\TranslateAdapter::class,
+                    \Translate\Entity\Translate::class,
                 ]
             )
         ;

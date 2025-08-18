@@ -5,19 +5,31 @@ namespace Translate\Form;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 
-class TranslationForm extends Form
+class TranslateForm extends Form
 {
     /**
-     * @var \Translate\Api\Adapter\TranslationAdapter
+     * @var \Translate\Api\Adapter\TranslateAdapter
      */
     protected $apiAdapterTranslate;
 
     public function init(): void
     {
-        // TODO Validate unicity of string/lang/locale for translation (see module Table).
+        // TODO Validate unicity of string/lang source/lang target for translation (see module Table).
 
         $this
-            ->setAttribute('id', 'translation-form')
+            ->setAttribute('id', 'translate-form')
+
+            ->add([
+                'name' => 'o:lang_source',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => 'Language source', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'o-lang-source',
+                    'required' => true,
+                ],
+            ])
             ->add([
                 'name' => 'o:string',
                 'type' => Element\Text::class,
@@ -30,13 +42,13 @@ class TranslationForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'o:lang',
+                'name' => 'o:lang_target',
                 'type' => Element\Text::class,
                 'options' => [
-                    'label' => 'Language', // @translate
+                    'label' => 'Language target', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'o-lang',
+                    'id' => 'o-lang-target',
                     'required' => true,
                 ],
             ])
@@ -48,17 +60,6 @@ class TranslationForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'o-translation',
-                    'required' => true,
-                ],
-            ])
-            ->add([
-                'name' => 'o:locale',
-                'type' => Element\Text::class,
-                'options' => [
-                    'label' => 'Locale', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'o-locale',
                     'required' => true,
                 ],
             ])

@@ -1,9 +1,11 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translate\Api\Representation\TranslationRepresentation $translation
- * @var \Translate\Api\Representation\TranslationRepresentation $resource
+ * @var \Translate\Api\Representation\TranslateRepresentation $translate
+ * @var \Translate\Api\Representation\TranslateRepresentation $resource
  */
+
+$translation = $translate;
 
 $plugins = $this->getHelperPluginManager();
 $i18n = $plugins->get('i18n');
@@ -19,7 +21,7 @@ $this->headLink()
 $owner = $translation->owner();
 ?>
 
-<?= $this->pageTitle($translation->displayTitle(), 1, $translate('Translations')) ?>
+<?= $this->pageTitle($translation->displayTitle(), 1, $translate('Translatings')) ?>
 
 <div id="page-actions">
     <?php if ($translation->userIsAllowed('update')): ?>

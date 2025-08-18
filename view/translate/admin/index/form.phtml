@@ -1,13 +1,15 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translate\Form\TranslationForm $form
- * @var \Translate\Api\Representation\TranslationRepresentation $translation
- * @var \Translate\Api\Representation\TranslationRepresentation $resource
+ * @var \Translate\Form\TranslateForm $form
+ * @var \Translate\Api\Representation\TranslateRepresentation $translate
+ * @var \Translate\Api\Representation\TranslateRepresentation $resource
  * @var string $action "add" or "edit"
  * @var string $submitLabel
  * @var string $deleteButton
  */
+
+$translation = $translate;
 
 $plugins = $this->getHelperPluginManager();
 $escape = $plugins->get('escapeHtml');

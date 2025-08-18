@@ -1,8 +1,8 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translate\Api\Representation\TranslationRepresentation[] $translations
- * @var \Translate\Api\Representation\TranslationRepresentation[] $resources
+ * @var \Translate\Api\Representation\TranslateRepresentation[] $translates
+ * @var \Translate\Api\Representation\TranslateRepresentation[] $resources
  * @var \Omeka\Form\ConfirmForm $formDeleteSelected
  * @var \Omeka\Form\ConfirmForm $formDeleteAll
  * @var array $returnQuery
@@ -19,14 +19,14 @@ $this->htmlElement('body')->appendAttribute('class', 'translations browse');
 $this->headLink()
     ->appendStylesheet($assetUrl('css/translate-admin.css', 'Translate'));
 
-$canBatchUpdate = $this->userIsAllowed(\Translate\Api\Adapter\TranslationAdapter::class, 'batch_update');
-$canBatchDeleteAll = $this->userIsAllowed(\Translate\Api\Adapter\TranslationAdapter::class, 'batch_delete_all');
+$canBatchUpdate = $this->userIsAllowed(\Translate\Api\Adapter\TranslateAdapter::class, 'batch_update');
+$canBatchDeleteAll = $this->userIsAllowed(\Translate\Api\Adapter\TranslateAdapter::class, 'batch_delete_all');
 ?>
 
 <?= $this->pageTitle(null, 1, $translate('Translate')) ?>
 
 <div id="page-actions">
-    <?php if ($this->userIsAllowed(\Translate\Api\Adapter\TranslationAdapter::class, 'create')): ?>
+    <?php if ($this->userIsAllowed(\Translate\Api\Adapter\TranslateAdapter::class, 'create')): ?>
     <?= $hyperlink($translate('Add new translation'), $this->url(null, ['action' => 'add'], true), ['class' => 'button']) ?>
     <?php endif; ?>
 </div>
@@ -62,7 +62,7 @@ $canBatchDeleteAll = $this->userIsAllowed(\Translate\Api\Adapter\TranslationAdap
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($translations as $translation): ?>
+            <?php foreach ($translates as $translation): ?>
             <tr>
                 <td>
                     <?php if ($canBatchUpdate && ($translation->userIsAllowed('update') || $translation->userIsAllowed('delete'))): ?>
