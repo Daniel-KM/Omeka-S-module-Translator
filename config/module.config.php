@@ -94,14 +94,24 @@ return [
             ],
         ],
     ],
+    'column_types' => [
+        'invokables' => [
+            'lang_source' => ColumnType\LangSource::class,
+            'lang_target' => ColumnType\LangTarget::class,
+            'automatic' => ColumnType\Automatic::class,
+            'reviewed' => ColumnType\Reviewed::class,
+            'string' => ColumnType\StringSource::class,
+            'translation' => ColumnType\Translation::class,
+        ],
+    ],
     'column_defaults' => [
         'admin' => [
             'translates' => [
+                // ['type' => 'string'],
                 ['type' => 'lang_source'],
                 ['type' => 'lang_target'],
                 ['type' => 'automatic'],
                 ['type' => 'reviewed'],
-                ['type' => 'string'],
                 ['type' => 'translation'],
                 ['type' => 'created'],
                 ['type' => 'modified'],
