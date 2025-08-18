@@ -336,10 +336,31 @@ class Module extends AbstractModule
             );
         }
 
+        // Update the quick settings when needed.
         $sharedEventManager->attach(
             \Omeka\Form\SettingForm::class,
             'form.add_elements',
             [$this, 'handleMainSettings']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Form\SiteSettingsForm::class,
+            'form.add_elements',
+            [$this, 'handleSiteSettings']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\SiteAdapter::class,
+            'api.create.post',
+            [$this, 'handleSaveSitePost']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\SiteAdapter::class,
+            'api.update.post',
+            [$this, 'handleSaveSitePost']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\SiteAdapter::class,
+            'api.delete.post',
+            [$this, 'handleSaveSitePost']
         );
     }
 
@@ -553,12 +574,13 @@ class Module extends AbstractModule
     /**
      * Normalize language pairs and remove unsupported pairs.
      *
-     * @todo Store the result one time each time the setting is updated.
+     * @todo Check with the list of languages fetched from endpoint.
      */
     protected function normalizeLanguagePairs(): array
     {
         /**
          * @var \Omeka\Settings\Settings $settings
+         * @var \Laminas\Log\Logger $logger
          */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
@@ -568,22 +590,46 @@ class Module extends AbstractModule
             return [];
         }
 
+        $logger = $services->get('Omeka\Logger');
+
         $result = [];
+        $errors = [];
         foreach ($pairs as $singleOrPair) {
             $r = array_map('trim', array_filter(explode('=', $singleOrPair)));
             if ($r) {
-                $langSource = count($r) === 1 ? null : strtr(mb_strtolower($r[0]), '_', '-');
+                $langSource = count($r) === 1 ? null : (strtr(mb_strtolower($r[0]), '_', '-') ?: null);
                 $langTarget = strtr(mb_strtolower(count($r) === 1 ? $r[0] : $r[1]), '_', '-');
-                if ($langTarget
-                    && isset(self::$langsSupportedOutput[$langTarget])
-                    && (!$langSource || isset(self::$langsSupportedInput[$langSource]))
-                ) {
-                    $result[] = [
-                        'source' => $langSource ?: null,
-                        'target' => $langTarget,
-                    ];
+                if ($langTarget) {
+                    $hasError = false;
+                    if ($langSource && !isset(self::$langsSupportedInput[$langSource])) {
+                        $hasError = true;
+                        $errors['source'][$langSource] = $langSource;
+                    }
+                    if (!isset(self::$langsSupportedOutput[$langTarget])) {
+                        $hasError = true;
+                        $errors['target'][$langTarget] = $langTarget;
+                    }
+                    if (!$hasError) {
+                        $result[] = [
+                            'source' => $langSource,
+                            'target' => $langTarget,
+                        ];
+                    }
                 }
             }
+        }
+
+        if (!empty($errors['source'])) {
+            $logger->err(
+                'The following source languages are not supported currently: {list}.', // @translate
+                ['list' => implode(', ', $errors['source'])]
+            );
+        }
+        if (!empty($errors['target'])) {
+            $logger->err(
+                'The following target languages are not supported currently: {list}.', // @translate
+                ['list' => implode(', ', $errors['target'])]
+            );
         }
 
         return array_values(array_unique($result, SORT_REGULAR));
@@ -667,5 +713,68 @@ class Module extends AbstractModule
         ];
 
         return $deeplClient->translateText($texts, $langSource, $langTarget, $options);
+    }
+
+    public function handleMainSettings(Event $event): void
+    {
+        $this->handleAnySettings($event, 'settings');
+        $this->prepareLangPairsBySite();
+    }
+
+    public function handleSiteSettings(Event $event): void
+    {
+        $this->handleAnySettings($event, 'site_settings');
+        $this->prepareLangPairsBySite();
+    }
+
+    public function handleSaveSitePost(Event $event): void
+    {
+        $this->prepareLangPairsBySite();
+    }
+
+    /**
+     * Store full pairs by site for quick process and to manage fallbacks.
+     */
+    protected function prepareLangPairsBySite(): void
+    {
+        /**
+         * @var \Omeka\Api\Manager $api
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Settings\SiteSettings $siteSettings
+         */
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $pairs = $this->normalizeLanguagePairs();
+        if (!count($pairs)) {
+            $settings->set('translator_lang_pairs_by_site', []);
+            return;
+        }
+
+        $api = $services->get('Omeka\ApiManager');
+        $siteSettings = $services->get('Omeka\Settings\Site');
+
+        $mainLocale = mb_strtolower(strtr(
+            $settings->get('locale')
+            ?: $services->get('Config')['translator']['locale']
+            ?: 'en_US',
+            ['_' => '-']
+        ));
+
+        $siteIds = $api->search('sites', [], ['returnScalar' => 'slug'])->getContent();
+        foreach ($siteIds as $siteId => $siteSlug) {
+            $siteLocale = mb_strtolower(strtr((string) $siteSettings->get('locale', null, $siteId))) ?: $mainLocale;
+            $siteLocaleShort = strtok($siteLocale, '-');
+            $sitePairs = [];
+            foreach ($pairs as $pair) {
+                if ($pair['target'] === $siteLocale || strtok($pair['target'], '-') === $siteLocaleShort) {
+                    $sitePairs[] = $pair;
+                }
+            }
+            $pairsBySite[$siteId] = $sitePairs;
+            $pairsBySite[$siteSlug] = $sitePairs;
+        }
+
+        $settings->set('translator_lang_pairs_by_site', $pairsBySite);
     }
 }
