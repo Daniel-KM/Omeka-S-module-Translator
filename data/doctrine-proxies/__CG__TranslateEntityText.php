@@ -195,7 +195,7 @@ class Text extends \Translate\Entity\Text implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setLang(string $lang): \Translate\Entity\Text
+    public function setLang(?string $lang): \Translate\Entity\Text
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setLang', [$lang]);
@@ -206,7 +206,7 @@ class Text extends \Translate\Entity\Text implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getLang(): string
+    public function getLang(): ?string
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getLang', []);

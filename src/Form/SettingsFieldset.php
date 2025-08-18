@@ -25,18 +25,22 @@ class SettingsFieldset extends Fieldset
 
             ->add([
                 'name' => 'translate_lang_source_default',
-                'type' => Element\Text::class,
+                'type' => Element\Select::class,
                 'options' => [
                     'element_group' => 'translate',
-                    'label' => 'Default language for source', // @translate
-                    'info' => 'The language should be a 2-letter iso code (ISO 3166-1) supported by the translation service. If empty, it will be automatically detected, that is not recommended for short strings.', // @translate
+                    'label' => 'Default language for values without any one', // @translate
+                    'info' => 'The language should be a 2-letter iso code (ISO 3166-1) supported by the translation service.', // @translate
                     'documentation' => 'https://developers.deepl.com/docs/getting-started/supported-languages',
+                    'value_options' => [
+                        '' => 'Automatic', // @translate
+                        'skip' => 'Skip', // @translate
+                    ] + \Translate\Module::$langsSupportedInput,
                 ],
                 'attributes' => [
                     'id' => 'translate_lang_source_default',
                     'required' => false,
-                    'minlength' => '1',
-                    'maxlength' => '2',
+                    'class' => 'chosen-select',
+                    'data-placeholder' => 'Select language…', // @translate
                 ],
             ])
             ->add([
@@ -44,16 +48,19 @@ class SettingsFieldset extends Fieldset
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'element_group' => 'translate',
-                    'label' => 'Pairs of languages to translate', // @translate
-                    'info' => 'Separate each pair by "=", one by line. The source language should be a 2-letter iso code (ISO 3166-1) supported by the translation service. The target language may have the localization code if supported.', // @translate
+                    'label' => 'Target languages or pairs of languages to translate', // @translate
+                    'info' => 'The source language will be automatically defined when not set. For pairs, separate source and target with a "=", one by line. The source language should be a 2-letter iso code (ISO 3166-1) supported by the translation service. The target language may have the localization code if supported.', // @translate
                     'documentation' => 'https://developers.deepl.com/docs/getting-started/supported-languages',
-                    // Most of the time, the same source is used for multiple targets.
+                    // Most of the time, the same source language is used for
+                    // multiple targets so don't use an associative array.
                     'as_key_value' => false,
                 ],
                 'attributes' => [
                     'id' => 'translate_lang_pairs',
                     'required' => false,
                     'placeholder' => <<<'TXT'
+                        de
+                        en-gb
                         fr = pt-br
                         TXT,
                 ],

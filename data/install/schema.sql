@@ -1,8 +1,9 @@
 CREATE TABLE `text` (
     `id` INT AUTO_INCREMENT NOT NULL,
-    `lang` VARCHAR(8) NOT NULL,
+    `lang` VARCHAR(8) DEFAULT NULL,
     `string` LONGTEXT NOT NULL,
-    UNIQUE INDEX `uniq_text_string_lang` (`string`, `lang`),
+    INDEX `idx_text_string` (`string`(190), `lang`),
+    INDEX `idx_text_lang` (`lang`),
     PRIMARY KEY(`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB;
 

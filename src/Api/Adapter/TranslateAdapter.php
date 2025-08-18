@@ -124,7 +124,7 @@ class TranslateAdapter extends AbstractEntityAdapter
             || $this->shouldHydrate($request, 'o:lang_source')
         ) {
             $string = trim((string) ($data['o:string'] ?? ''));
-            $lang = trim((string) ($data['o:lang_source'] ?? ''));
+            $lang = trim((string) ($data['o:lang_source'] ?? '')) ?: null;
             if (Request::CREATE === $request->getOperation()) {
                 $text = $this->getText($string, $lang)
                     ?: (new Text())->setString($string)->setLang($lang);

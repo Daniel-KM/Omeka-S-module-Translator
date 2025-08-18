@@ -12,15 +12,27 @@ use Omeka\Entity\AbstractEntity;
  * The value of lang is almost always the same for common databases and is
  * already indexed in field lang of value.
  *
+ * The index "text/lang source" must be unique, but there may be a duplicate
+ * issue on update (mysql is not sql), so a simple index is created.
+ *
  * @Entity
  * @Table(
- *     uniqueConstraints={
- *         @UniqueConstraint(
- *             name="uniq_text_string_lang",
+ *     indexes={
+ *         @Index(
+ *             name="idx_text_string",
  *             columns={
  *                 "string",
  *                 "lang"
- *            }
+ *             },
+ *             options={
+ *                 "lengths": {190}
+ *             }
+ *         ),
+ *         @Index(
+ *             name="idx_text_lang",
+ *             columns={
+ *                 "lang"
+ *             }
  *         )
  *     }
  * )
@@ -44,13 +56,13 @@ class Text extends AbstractEntity
      * supported too for now.
      * @see https://developers.deepl.com/docs/getting-started/supported-languages
      *
-     * An empty string means undetermined and implies an automatic detection.
+     * A null means a text without language and implies an automatic detection.
      *
      * @var string
      *
      * @Column(
      *     length=8,
-     *     nullable=false
+     *     nullable=true
      * )
      */
     protected $lang;
@@ -93,13 +105,13 @@ class Text extends AbstractEntity
         return $this->id;
     }
 
-    public function setLang(string $lang): self
+    public function setLang(?string $lang): self
     {
         $this->lang = $lang;
         return $this;
     }
 
-    public function getLang(): string
+    public function getLang(): ?string
     {
         return $this->lang;
     }

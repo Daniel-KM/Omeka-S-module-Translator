@@ -22,9 +22,24 @@
         "i18n",
         "localisation"
     ],
+    "require": {
+        "deeplcom/deepl-php": "^1.12",
+        "symfony/http-client": "^5.4",
+        "nyholm/psr7": "^1.8"
+    },
+    "replace": {
+        "psr/container": "*",
+        "symfony/polyfill-php80": "*"
+    },
     "autoload": {
         "psr-4": {
             "Translate\\": "src/"
+        }
+    },
+    "config": {
+        "platform": {"php": "7.4"},
+        "allow-plugins": {
+            "php-http/discovery": true
         }
     }
 }
