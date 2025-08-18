@@ -28,6 +28,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\SettingsFieldset::class => Form\SettingsFieldset::class,
             Form\TranslateForm::class => Form\TranslateForm::class,
         ],
     ],
@@ -164,6 +165,12 @@ return [
     'translate' => [
         'config' => [
             'translate_deepl_api_key' => '',
+        ],
+        'settings' => [
+            'translate_lang_pairs' => [],
+            'translate_lang_source_default' => '',
+            'translate_properties_include' => [],
+            'translate_properties_exclude' => [],
         ],
     ],
 ];

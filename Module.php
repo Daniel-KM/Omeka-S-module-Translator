@@ -7,6 +7,7 @@ if (!class_exists('Common\TraitModule', false)) {
 }
 
 use Common\TraitModule;
+use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\MvcEvent;
 use Omeka\Module\AbstractModule;
 
@@ -15,6 +16,69 @@ class Module extends AbstractModule
     use TraitModule;
 
     public const NAMESPACE = __NAMESPACE__;
+
+    protected function preInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $translate = $services->get('ControllerPluginManager')->get('translate');
+
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.71')) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Common', '3.4.71'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+    }
+
+    protected function postInstall(): void
+    {
+        /**
+         * @var \Omeka\Api\Manager $api
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Settings\SiteSettings $siteSettings
+         */
+        $services = $this->getServiceLocator();
+        $api = $services->get('Omeka\ApiManager');
+        $settings = $services->get('Omeka\Settings');
+        $siteSettings = $services->get('Omeka\Settings\Site');
+
+        $settings->set('translate_properties_include', [
+            'properties_max_500',
+        ]);
+        $settings->set('translate_properties_exclude', [
+            'properties_min_500',
+            'bibo:content',
+            'extracttext:extracted_text',
+        ]);
+
+        $mainLocale = $settings->get('locale', 'en-US');
+        if (!$mainLocale) {
+            return;
+        }
+
+        $mainLocale = strtr($mainLocale, '_', '-');
+        $pos = strpos($mainLocale, '-');
+        $mainLocale = $pos
+            ? mb_substr(mb_strtolower($mainLocale), 0, $pos) . '-' . mb_substr(mb_strtoupper($mainLocale), $pos)
+            : mb_strtolower($mainLocale);
+        $settings->set('translate_lang_source_default', $mainLocale);
+
+        $siteIds = $api->search('sites', [], ['returnScalar' => 'id'])->getContent();
+        $pairs = [];
+        foreach ($siteIds as $siteId) {
+            $siteSettings->setTargetId($siteId);
+            $siteLocale = strtr($siteSettings->get('locale'), '_', '-');
+            $pos = strpos($siteLocale, '-');
+            $siteLocale = $pos
+                ? mb_substr(mb_strtolower($siteLocale), 0, $pos) . '-' . mb_substr(mb_strtoupper($siteLocale), $pos)
+                : mb_strtolower($siteLocale);
+            if ($siteLocale && $siteLocale !== $mainLocale) {
+                $pairs[] = [$mainLocale => $siteLocale];
+            }
+        }
+        $settings->set('translate_lang_pairs', $pairs);
+    }
 
     public function onBootstrap(MvcEvent $event): void
     {
@@ -142,17 +206,12 @@ class Module extends AbstractModule
         ;
     }
 
-    protected function preInstall(): void
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
-        $services = $this->getServiceLocator();
-        $translate = $services->get('ControllerPluginManager')->get('translate');
-
-        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.71')) {
-            $message = new \Omeka\Stdlib\Message(
-                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Common', '3.4.71'
-            );
-            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
-        }
+        $sharedEventManager->attach(
+            \Omeka\Form\SettingForm::class,
+            'form.add_elements',
+            [$this, 'handleMainSettings']
+        );
     }
 }
