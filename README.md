@@ -1,37 +1,23 @@
-Translate (module for Omeka S)
-==============================
+Translator (module for Omeka S)
+===============================
 
 > __New versions of this module and support for Omeka S version 3.0 and above
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__
 
-[Translate] is a module for [Omeka S] that allows to manage tables of data, for
-example a list of language codes, a list of country codes, or unimarc codes.
-Each code can have multiple labels, for example for translations.
+[Translator] is a module for [Omeka S] that allows to manage translations of
+resource values and site page block strings and to display them in public pages
+according to the site locale. Translations can be generated automatically via
+[DeepL], a German specialist of quality translations and GPDR compliant.
 
-It is a library useful to normalize data or to denormalize them. It can be used
-by some other modules or in themes:
+Translations can be stored directly as value in resources for specific
+properties, or stored in a decontextualized way in the database, so translation
+can be used anywhere. Multiple translations can be made for each source string.
 
-- [Advanced Resource Template] to display a select for literal data. Unlike [Custom Vocab]
-  or [Value Suggest], the data type should be literal.
-- [Advanced Search adapter for Solr] to normalize data to index and to search,
-  in particular when it is not possible to have consistent data because some
-  librarians want to fill languages, countries or other data as plain text and
-  other ones as an iso code with two letters, some other ones with the three
-  letters iso codes, some other ones with the three-letters bibliographic
-  variant, or when data are fetched from various external repositories with
-  specific codes.
-- [Bulk Import] to convert codes into data (label, translation, or a more
-  standard code) or the reverse.
-- [User Profile] to add a select in user form.
+Some features are not yet available: translation of site page blocks and storage
+of translated values in resource itself. See todo below.
 
-An associative table contains two columns: a code, a keyword or a uri and the
-matching value or label, with an optional language.
-
-When using a uri, the purpose is similar to a list of uris managed by the module
-[Custom Vocab]. Of course, when possible, it is recommended to use online
-standard vocabularies via module [Value Suggest], for example for countries or
-languages.
+See the list of [supported languages by DeepL].
 
 
 Installation
@@ -39,60 +25,55 @@ Installation
 
 See general end user documentation for [installing a module].
 
-This module requires the module [Common], that should be installed first.
+The module [Common] must be installed first.
+
+The module uses an external library, [deepl-php], so use the release zip to
+install it, or use and init the source.
 
 * From the zip
 
-Download the last release [Table.zip] from the list of releases, and
-uncompress it in the `modules` directory.
+Download the last release [Translator.zip] from the list of releases (the master
+does not contain the dependency), and uncompress it in the `modules` directory.
 
-* From the source and for development
+* From the source and for development:
 
 If the module was installed from the source, rename the name of the folder of
-the module to `Table`.
+the module to `Translator`, and go to the root module, and run:
 
-Then install it like any other Omeka module and follow the config instructions.
+```sh
+composer install --no-dev
+```
+
+Then install it like any other Omeka module.
+
+Note: For technical reasons, the module cannot be named "Translate", so
+"Translator" is used instead.
 
 
 Usage
 -----
 
-Just fill the form: set a unique name (the slug, a lower case string starting
-with a letter), a title, a language and fill the text area with a list of codes
-and labels, separated with a `=`, one pair by line. A language may be appended
-too when the table is not associative.
-
-### User Profile and config of themes
-
-To use a table in module [User Profile] or in config of themes, add it like that:
-
-```ini
-elements.userprofile_organisation.name                          = "userprofile_organisation"
-elements.userprofile_organisation.type                          = "Table\Form\Element\TableSelect"
-elements.userprofile_organisation.options.element_group         = "profile"
-elements.userprofile_organisation.options.label                 = "Organisation"
-elements.userprofile_organisation.options.table                 = "organisation"
-elements.userprofile_organisation.options.empty_option          = ""
-elements.userprofile_organisation.attributes.id                 = "userprofile_organisation"
-elements.userprofile_organisation.attributes.class              = "chosen-select"
-elements.userprofile_organisation.attributes.data-placeholder   = "Select an organisation…"
-```
-
-The option `table` can be the table id or the table slug.
+For automatic translation, an api key is needed, so you need to open an account
+at [DeepL]. The free account allows to translate 500000 characters by month,
+that is large enough in most common cases.
 
 
 TODO
 ----
 
-- [x] Add an option to allow to use the same code for multiple values, for
-      example for multiple labels or languages or a code with different
-      meanings. The point is mainly the api representation.
-- [ ] Use js [datatables] (or see packagist/github) or use direct edition (see
-      module Group).
-- [ ] Provide common tables by default (languages, countries, unimarc).
-- [ ] Finalize integration in resource template.
-- [ ] Remove the limit of two columns (three with lang).
-- [ ] Allow to use any column header.
+- [x] Divide the sql table internally in two tables, one for strings and one for translations.
+- [ ] Check normalization of json-ld.
+- [ ] Finalize manual translation; use a tab in resource and a specific menu (see AiGenerator).
+- [ ] Store of translated values in resource itself.
+- [ ] Use resource template to define properties to translate instead of the main settings.
+- [ ] Translation of site page blocks.
+- [ ] Add options of DeepL Api.
+- [ ] Translate html and xml and manage their options.
+- [ ] Add template form to store values or not.
+- [ ] Add to api. See https://www.w3.org/TR/json-ld/#language-indexing
+- [ ] See https://packagist.org/packages/boxblinkracer/phpunuhi, a framework to validate and manage translations.
+- [ ] Allow to get translation in translation/lang to get the translated/lang,
+      so avoid some translations pairs. But more complex to get the translation.
 
 
 Warning
@@ -143,28 +124,25 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2023-2025 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2025 (see [Daniel-KM] on GitLab)
 
-Initially created for the digital library [Numistral].
+Initially created for the digital library, the [Curiothèque] of the [Musée Curie].
 
 
-[Table]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table
+[Translator]: https://gitlab.com/Daniel-KM/Omeka-S-module-Translator
 [Omeka S]: https://omeka.org/s
-[Advanced Resource Template]: https://gitlab.com/Daniel-KM/Omeka-S-module-AdvancedResourceTemplate
-[Advanced Search adapter for Solr]: https://gitlab.com/Daniel-KM/Omeka-S-module-SearchSolr
-[Bulk Import]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkImport
-[User Profile]: https://gitlab.com/Daniel-KM/Omeka-S-module-UserProfile
-[Custom Vocab]: https://omeka.org/s/modules/CustomVocab
-[Value Suggest]: https://omeka.org/s/modules/ValueSuggest
+[DeepL]: https://www.deepl.com
+[supported languages by DeepL]: https://developers.deepl.com/docs/getting-started/supported-languages
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
 [installing a module]: https://omeka.org/s/docs/user-manual/modules
-[Table.zip]: https://github.com/Daniel-KM/Omeka-S-module-Table/releases
-[datatables]: https://datatables.net
-[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-Table/issues
+[deepl-php]: https://packagist.org/packages/deeplcom/deepl-php
+[Translator.zip]: https://github.com/Daniel-KM/Omeka-S-module-Translator/releases
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-Translator/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
-[Numistral]: https://numistral.fr
+[Curiothèque]: https://curiotheque.musee.curie.fr/
+[Musée curie]: https://musee.curie.fr
 [GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"

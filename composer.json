@@ -1,6 +1,6 @@
 {
     "name": "daniel-km/omeka-s-module-translator",
-    "description": "Module for Omeka S that allows to translate resources and pages manually or automatically.",
+    "description": "Module for Omeka S that allows to translate resources automatically.",
     "type": "library",
     "license": "CECILL-2.1",
     "authors": [
