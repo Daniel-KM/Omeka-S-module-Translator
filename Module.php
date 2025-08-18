@@ -756,8 +756,6 @@ class Module extends AbstractModule
         $sizeLimitToExcludeMin = $t ? max($t) : 0;
         $hasNoSizeLimitToInclude = !$sizeLimitToExcludeMin && !$sizeLimitToIncludeMax;
 
-        $textsToTranslate = [];
-
         // Simplify list of values and filters properties.
         $allValues = $resource->values();
         $allValues = array_diff_key($allValues, $propertiesToExclude);
@@ -767,6 +765,8 @@ class Module extends AbstractModule
                 return [];
             }
         }
+
+        $textsToTranslate = [];
 
         $pairsLangsSource = array_column($pairs, 'source', 'source');
 
@@ -817,6 +817,11 @@ class Module extends AbstractModule
                         $textsToTranslate[$key]['texts'][] = $val;
                     }
                 }
+                // Avoid duplication of texts.
+                foreach ($textsToTranslate as &$data) {
+                    $data['texts'] = array_values(array_unique($data['texts']));
+                }
+                unset($data);
             }
         }
 
