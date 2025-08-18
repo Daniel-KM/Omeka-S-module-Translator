@@ -1,13 +1,9 @@
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-#
-# Daniel Berthereau <Daniel.gitlab@Berthereau.net>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-28 00:00+0000\n"
-"PO-Revision-Date: 2025-07-28 00:00+0000\n"
+"POT-Creation-Date: 2025-08-18 00:00+0000\n"
+"PO-Revision-Date: 2025-08-18 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: French <kde-i18n-doc@kde.org>\n"
 "Language: fr\n"
@@ -16,3 +12,259 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 3.2.2\n"
+
+#: data/scripts/upgrade.php:38 Module.php:149
+#, php-format
+msgid "The module %1$s should be upgraded to version %2$s or later."
+msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
+
+#: Module.php:206
+msgid ""
+"Fill your DeepL api key, then set languages to translate in {link}main "
+"settings{link_end}."
+msgstr ""
+"Indiquez votre clé api DeepL, puis définissez les langues à traduire dans "
+"{link}les paramètres généraux{link_end}."
+
+#: Module.php:878
+msgid "The following source languages are not supported currently: {list}."
+msgstr ""
+"Les langues sources suivantes ne sont pas prises en charge actuellement : "
+"{list}."
+
+#: Module.php:884
+msgid "The following target languages are not supported currently: {list}."
+msgstr ""
+"Les langues cibles suivantes ne sont pas prises en charge actuellement : "
+"{list}."
+
+#: src/Form/SettingsFieldset.php:14
+msgid "Internationalisation: Resources"
+msgstr "Internationalisation: Ressources"
+
+#: src/Form/SettingsFieldset.php:17
+msgid "Internationalisation: resources"
+msgstr "Internationalisation : ressources"
+
+#: src/Form/SettingsFieldset.php:31
+msgid "Default language for values without any one"
+msgstr "Langue par défaut pour les valeurs sans"
+
+#: src/Form/SettingsFieldset.php:32
+msgid ""
+"The language should be a 2-letter iso code (ISO 3166-1) supported by the "
+"translation service."
+msgstr ""
+"La langue doit être un code ISO à 2 lettres (ISO 3166-1) pris en charge par "
+"le service de traduction."
+
+#: src/Form/SettingsFieldset.php:35
+msgid "Automatic"
+msgstr "Automatique"
+
+#: src/Form/SettingsFieldset.php:36
+msgid "Skip"
+msgstr "Ignorer"
+
+#: src/Form/SettingsFieldset.php:43
+msgid "Select language…"
+msgstr "Choisir la langue…"
+
+#: src/Form/SettingsFieldset.php:51
+msgid "Target languages or pairs of languages to translate"
+msgstr "Langues cibles ou paires de langues à traduire"
+
+#: src/Form/SettingsFieldset.php:52
+msgid ""
+"The source language will be automatically defined when not set. For pairs, "
+"separate source and target with a \"=\", one by line. The source language "
+"should be a 2-letter iso code (ISO 3166-1) supported by the translation "
+"service. The target language may have the localization code if supported."
+msgstr ""
+"La langue source sera automatiquement définie si elle n’est pas indiquée. "
+"Pour les paires, séparez la source et la cible par un « = », une ligne à la "
+"fois. La langue source doit être un code ISO à 2 lettres (ISO 3166-1) pris "
+"en charge par le service de traduction. La langue cible peut comporter le "
+"code de localisation s’il est pris en charge."
+
+#: src/Form/SettingsFieldset.php:75
+msgid "Properties to translate"
+msgstr "Propriétés à traduire"
+
+#: src/Form/SettingsFieldset.php:76
+msgid ""
+"Only literal data are translated, not numeric values, resources, uri, or "
+"other data. It is recommended to remove big fields from the list of "
+"properties, in particular extracted text."
+msgstr ""
+"Seules les données littérales sont traduites, pas les valeurs numériques, ni "
+"les ressources, ni les uri ou d’autres données. Il est recommandé de "
+"supprimer les champs avec de grandes valeurs de la liste des propriétés, en "
+"particulier le texte extrait."
+
+#: src/Form/SettingsFieldset.php:80 src/Form/SettingsFieldset.php:110
+msgid "Resource metadata"
+msgstr "Métadonnées de la ressource"
+
+#: src/Form/SettingsFieldset.php:82
+msgid "All properties"
+msgstr "Toutes les propriétés"
+
+#: src/Form/SettingsFieldset.php:83 src/Form/SettingsFieldset.php:115
+msgid "All properties less or equal to 500 characters"
+msgstr "Propriétés inférieures ou égales à 500 caractères"
+
+#: src/Form/SettingsFieldset.php:84 src/Form/SettingsFieldset.php:116
+msgid "All properties less or equal to 1000 characters"
+msgstr "Propriétés inférieures ou égales à 1000 caractères"
+
+#: src/Form/SettingsFieldset.php:85 src/Form/SettingsFieldset.php:117
+msgid "All properties less or equal to 5000 characters"
+msgstr "Propriétés inférieures ou égales à 5000 caractères"
+
+#: src/Form/SettingsFieldset.php:86 src/Form/SettingsFieldset.php:112
+msgid "All properties more than 500 characters"
+msgstr "Propriétés de plus de 500 caractères"
+
+#: src/Form/SettingsFieldset.php:87 src/Form/SettingsFieldset.php:113
+msgid "All properties more than 1000 characters"
+msgstr "Propriétés de plus de 1000 caractères"
+
+#: src/Form/SettingsFieldset.php:88 src/Form/SettingsFieldset.php:114
+msgid "All properties more than 5000 characters"
+msgstr "Propriétés de plus de 5000 caractères"
+
+#: src/Form/SettingsFieldset.php:98 src/Form/SettingsFieldset.php:127
+msgid "Select properties…"
+msgstr "Choisir des propriétés…"
+
+#: src/Form/SettingsFieldset.php:106
+msgid "Properties not to translate"
+msgstr "Propriétés à ne pas traduire"
+
+#: src/Form/ConfigForm.php:17
+msgid "DeepL api key for automatic translation"
+msgstr "Clé api DeepL pour la traduction automatique"
+
+#: src/Api/Adapter/TranslationAdapter.php:105
+msgid "The translation requires a target language."
+msgstr "La traduction nécessite une langue cible."
+
+#: src/Api/Adapter/TranslationAdapter.php:110
+msgid "The translation requires a source string."
+msgstr "La traduction nécessite une chaîne source."
+
+#: src/Api/Adapter/TranslationAdapter.php:115
+msgid "The translation requires a translated string."
+msgstr "La traduction nécessite une chaîne traduite."
+
+#: src/Api/Adapter/TranslationAdapter.php:196
+msgid ""
+"The string \"{string}\", source language \"{language}\" and target language "
+"\"{language_2}\" to translate must be unique."
+msgstr ""
+"La chaîne « {string} », la langue source « {language} » et la langue cible "
+"« {language_2} » à traduire doivent être uniques."
+
+#~ msgid "Translate"
+#~ msgstr "Traduire"
+
+#~ msgid "New translation"
+#~ msgstr "Nouvelle traduction"
+
+#~ msgid "Translations"
+#~ msgstr "Traductions"
+
+#~ msgid "Add new translation"
+#~ msgstr "Ajouter une traduction"
+
+#~ msgid "Select translation"
+#~ msgstr "Sélectionner la traduction"
+
+#~ msgid "Delete translations"
+#~ msgstr "Supprimer les traductions"
+
+#~ msgid "Are you sure you would like to delete the selected translations?"
+#~ msgstr "Êtes-vous sûr de vouloir supprimer les traductions sélectionnées ?"
+
+#, php-format
+#~ msgid ""
+#~ "%1$s: this action will permanently delete %2$s translations and cannot be "
+#~ "undone."
+#~ msgstr ""
+#~ "%1$s : cette action supprimera définitivement %2$s traductions et ne "
+#~ "pourra pas être annulée."
+
+#~ msgid ""
+#~ "Are you sure you would like to delete all translations on all pages of "
+#~ "this result?"
+#~ msgstr ""
+#~ "Êtes-vous sûr de vouloir supprimer toutes les traductions sur toutes les "
+#~ "pages de ce résultat ?"
+
+#~ msgid "Omeka could not find any translations."
+#~ msgstr "Omeka n’a trouvé aucune traduction."
+
+#~ msgid "Language source"
+#~ msgstr "Langue source"
+
+#~ msgid "Language translation"
+#~ msgstr "Langue de traduction"
+
+#, php-format
+#~ msgid "Is automatic: %s"
+#~ msgstr "Est automatique : %s"
+
+#, php-format
+#~ msgid "Is reviewed: %s"
+#~ msgstr "Est relu : %s"
+
+#~ msgid "String"
+#~ msgstr "Chaîne"
+
+#~ msgid "Translation"
+#~ msgstr "Traduction"
+
+#~ msgid "Edit translation"
+#~ msgstr "Modifier la traduction"
+
+#~ msgid "Language target"
+#~ msgstr "Langue cible"
+
+#~ msgid "Is automatic"
+#~ msgstr "Est automatique"
+
+#~ msgid "Is reviewed"
+#~ msgstr "Est relu"
+
+#~ msgid ""
+#~ "Translation successfully created. {link}Add another translation?{link_end}"
+#~ msgstr ""
+#~ "Traduction créée avec succès. {link}Ajouter une autre "
+#~ "traduction{link_end} ?"
+
+#~ msgid "Translation successfully updated."
+#~ msgstr "La traduction a été mise à jour avec succès."
+
+#~ msgid "translation"
+#~ msgstr "traduction"
+
+#~ msgid "Translation successfully deleted."
+#~ msgstr "Traduction supprimée avec succès."
+
+#~ msgid "You must select at least one translation to batch delete."
+#~ msgstr ""
+#~ "Vous devez sélectionner au moins une traduction pour supprimer par lot."
+
+#~ msgid "Translations successfully deleted."
+#~ msgstr "Traductions supprimées avec succès."
+
+#~ msgid ""
+#~ "Deleting translations started in background (job {link_job}#{job_id}"
+#~ "{link_end}, {link_log}logs{link_end})."
+#~ msgstr ""
+#~ "Suppression des traductions lancée en arrière-plan (tâche {link_job}"
+#~ "#{job_id}{link_end}, {link_log}journaux{link_end})."
+
+#~ msgid "Reviewed"
+#~ msgstr "Relu"
