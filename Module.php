@@ -221,6 +221,7 @@ class Module extends AbstractModule
         // Translations have no visibility, so they are all public.
         // Only backend user can edit them and admin can batch-delete them.
 
+        /*
         $backendRoles = [
             \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
             \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
@@ -229,6 +230,7 @@ class Module extends AbstractModule
             \Omeka\Permissions\Acl::ROLE_AUTHOR,
             \Omeka\Permissions\Acl::ROLE_RESEARCHER,
         ];
+        */
         $backendRolesExceptResearcher = [
             \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
             \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
@@ -267,36 +269,6 @@ class Module extends AbstractModule
                 ]
             )
 
-            // All backend roles can search and read translations in admin.
-            ->allow(
-                $backendRoles,
-                [
-                    \Translator\Controller\Admin\IndexController::class,
-                ],
-                [
-                    'index',
-                    'browse',
-                    'search',
-                    'show',
-                    'show-details',
-                ]
-            )
-
-            // All roles except researcher can translate and batch translate.
-            // Even author can batch process, except batch delete.
-            ->allow(
-                $backendRolesExceptResearcher,
-                [
-                    \Translator\Controller\Admin\IndexController::class,
-                ],
-                [
-                    'add',
-                    'edit',
-                    'delete',
-                    'delete-confirm',
-                    'batch-edit',
-                ]
-            )
             ->allow(
                 $backendRolesExceptResearcher,
                 [
@@ -314,15 +286,6 @@ class Module extends AbstractModule
                 [
                     \Translator\Entity\Text::class,
                     \Translator\Entity\Translation::class,
-                ]
-            )
-            ->allow(
-                $backendRolesAdmins,
-                [
-                    \Translator\Controller\Admin\IndexController::class,
-                ],
-                [
-                    'batch-delete',
                 ]
             )
             ->allow(

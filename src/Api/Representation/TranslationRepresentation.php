@@ -12,10 +12,20 @@ class TranslationRepresentation extends AbstractEntityRepresentation
      */
     protected $resource;
 
+    /**
+     * @todo There is no controller for now. The name should not be the same than module Internationalisation (so use translator, or add a sub-path, or add a check in controller, or have actions different).
+     * @see \Internationalisation\Api\Representation\TranslatingRepresentation
+     * @see \Translator\Api\Representation\TranslationRepresentation
+     *
+     * {@inheritDoc}
+     * @see \Omeka\Api\Representation\AbstractResourceRepresentation::getControllerName()
+     */
+    /*
     public function getControllerName()
     {
         return 'translation';
     }
+    */
 
     public function getJsonLdType()
     {
