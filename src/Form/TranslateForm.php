@@ -2,6 +2,7 @@
 
 namespace Translate\Form;
 
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 
@@ -31,17 +32,6 @@ class TranslateForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'o:string',
-                'type' => Element\Text::class,
-                'options' => [
-                    'label' => 'String', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'o-string',
-                    'required' => true,
-                ],
-            ])
-            ->add([
                 'name' => 'o:lang_target',
                 'type' => Element\Text::class,
                 'options' => [
@@ -49,6 +39,37 @@ class TranslateForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'o-lang-target',
+                    'required' => true,
+                ],
+            ])
+            ->add([
+                'name' => 'o:automatic',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'label' => 'Is automatic', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'o-automatic',
+                ],
+            ])
+            ->add([
+                'name' => 'o:reviewed',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'label' => 'Is reviewed', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'o-reviewed',
+                ],
+            ])
+            ->add([
+                'name' => 'o:string',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => 'String', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'o-string',
                     'required' => true,
                 ],
             ])
@@ -61,22 +82,6 @@ class TranslateForm extends Form
                 'attributes' => [
                     'id' => 'o-translation',
                     'required' => true,
-                ],
-            ])
-            ->add([
-                'name' => 'o:automatic',
-                'type' => Element\Hidden::class,
-                'attributes' => [
-                    'id' => 'o-automatic',
-                    'value' => '0',
-                ],
-            ])
-            ->add([
-                'name' => 'o:reviewed',
-                'type' => Element\Hidden::class,
-                'attributes' => [
-                    'id' => 'o-reviewed',
-                    'value' => '0',
                 ],
             ])
         ;
