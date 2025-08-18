@@ -124,9 +124,13 @@ class Module extends AbstractModule
             'pt-br',
             'pt-pt',
         ],
+        // TODO "zh-hant" should be first when the main language is zh-tw.
         'zh' => [
             'zh-hans',
             'zh-hant',
+            // For laminas.
+            'zh-cn',
+            'zh-tw',
         ],
     ];
 
