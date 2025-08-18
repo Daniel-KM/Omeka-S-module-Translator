@@ -118,6 +118,13 @@ class TranslationAdapter extends AbstractEntityAdapter
 
         // The data are checked in validateRequest().
 
+        // During creation or update, the entity manager is not yet flushed, so
+        // there are multiple times the same source string and language. The
+        // same Text should be used each time to make it unique. So it is cached
+        // and persisited separately and immediately after creation.
+        // Another solution is to store a Text with multiple translations, but
+        // the logic is the inverse in the module.
+
         $data = $request->getContent();
 
         if ($this->shouldHydrate($request, 'o:string')
@@ -125,9 +132,9 @@ class TranslationAdapter extends AbstractEntityAdapter
         ) {
             $string = trim((string) ($data['o:string'] ?? ''));
             $lang = trim((string) ($data['o:lang_source'] ?? '')) ?: null;
+            $text = null;
             if (Request::CREATE === $request->getOperation()) {
-                $text = $this->getText($string, $lang)
-                    ?: (new Text())->setString($string)->setLang($lang);
+                $text = $this->getOrCreateText($string, $lang, true);
             } else {
                 $existingText = $entity->getText();
                 $existingLang = $existingText->getLang();
@@ -135,7 +142,7 @@ class TranslationAdapter extends AbstractEntityAdapter
                 // Keep the existing text if string and lang are not updated.
                 if ($string !== $existingString || $lang !== $existingLang) {
                     // If there is a new string or lang, check existing text.
-                    $text = $this->getText($string, $lang);
+                    $text = $this->getOrCreateText($string, $lang, false);
                     if ($text) {
                         // Remove existing text if not linked to another,
                         // translation.
@@ -143,13 +150,11 @@ class TranslationAdapter extends AbstractEntityAdapter
                         if ($existingText->getTranslations()->count() <= 1) {
                             $this->getEntityManager()->remove($existingText);
                         }
-                    } else {
+                    } elseif ($existingText->getTranslations()->count() <= 1) {
                         // Keep existing text if not linked to another translation.
-                        if ($existingText->getTranslations()->count() > 1) {
-                            $text = (new Text())->setString($string)->setLang($lang);
-                        } else {
-                            $text = $existingText->setString($string)->setLang($lang);
-                        }
+                        $text = $existingText->setString($string)->setLang($lang);
+                    } else {
+                        $this->getOrCreateText($string, $lang, true);
                     }
                 }
             }
@@ -187,11 +192,35 @@ class TranslationAdapter extends AbstractEntityAdapter
         }
     }
 
-    protected function getText(string $string, ?string $lang): ?Text
+    /**
+     * @fixme During a large import or update, the static cache of Text may grow too much.
+     */
+    protected function getOrCreateText(string $string, ?string $lang, bool $create): Text
     {
-        return $this->getEntityManager()->getRepository(\Translator\Entity\Text::class)->findOneBy([
+        // A cache is needed to create/update a string with multiple languages.
+        // The Text should be persisted.
+        static $texts = [];
+
+        $lang = $lang ?: '';
+
+        $cacheKey = sha1('/' . $lang . '/' . $string . '/');
+
+        if (isset($texts[$cacheKey])) {
+            return $texts[$cacheKey];
+        }
+
+        $text = $this->getEntityManager()->getRepository(\Translator\Entity\Text::class)->findOneBy([
             'lang' => $lang,
             'string' => $string,
         ]);
+
+        if (!$text && $create) {
+            $text = (new Text())->setString($string)->setLang($lang);
+            $this->getEntityManager()->persist($text);
+        }
+
+        $texts[$cacheKey] = $text;
+
+        return $text;
     }
 }
