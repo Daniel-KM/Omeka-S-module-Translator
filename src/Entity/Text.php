@@ -17,6 +17,7 @@ use Omeka\Entity\AbstractEntity;
  *
  * @Entity
  * @Table(
+ *     name="translate_text",
  *     indexes={
  *         @Index(
  *             name="idx_text_string",
