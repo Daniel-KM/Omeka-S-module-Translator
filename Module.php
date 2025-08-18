@@ -9,7 +9,6 @@ if (!class_exists('Common\TraitModule', false)) {
 use Common\TraitModule;
 use Laminas\Mvc\MvcEvent;
 use Omeka\Module\AbstractModule;
-use Omeka\Permissions\Assertion\OwnsEntityAssertion;
 
 class Module extends AbstractModule
 {
@@ -24,20 +23,42 @@ class Module extends AbstractModule
         /** @var \Omeka\Permissions\Acl $acl */
         $acl = $this->getServiceLocator()->get('Omeka\Acl');
 
-        // TODO Check if it is useful to set permissions to Code.
+        // Translations have no visibility, so they are all public.
+        // Only backend user can edit them and admin can batch-delete them.
 
-        $allRoles = $acl->getRoles();
+        $backendRoles = [
+            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            \Omeka\Permissions\Acl::ROLE_REVIEWER,
+            \Omeka\Permissions\Acl::ROLE_AUTHOR,
+            \Omeka\Permissions\Acl::ROLE_RESEARCHER,
+        ];
+        $backendRolesExceptResearcher = [
+            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            \Omeka\Permissions\Acl::ROLE_REVIEWER,
+            \Omeka\Permissions\Acl::ROLE_AUTHOR,
+        ];
+        $backendRolesAdmins = [
+            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            \Omeka\Permissions\Acl::ROLE_REVIEWER,
+        ];
 
         $acl
-            // Anybody can search and read tables (mainly via api endpoint).
+            // Anybody can search and read translations mainly via api endpoint.
+            // No translation is private.
             ->allow(
                 null,
                 [
                     \Translate\Api\Adapter\TranslateAdapter::class,
                 ],
                 [
-                    'search',
                     'read',
+                    'search',
                 ]
             )
             ->allow(
@@ -51,9 +72,9 @@ class Module extends AbstractModule
                 ]
             )
 
-            // All backend roles can search read tables.
+            // All backend roles can search and read translations in admin.
             ->allow(
-                $allRoles,
+                $backendRoles,
                 [
                     \Translate\Controller\Admin\IndexController::class,
                 ],
@@ -66,13 +87,10 @@ class Module extends AbstractModule
                 ]
             )
 
-            // Author can manage own tables.
-            // Reviewer can manage all tables and delete own ones.
+            // All roles except researcher can translate and batch translate.
+            // Even author can batch process, except batch delete.
             ->allow(
-                [
-                    $acl::ROLE_AUTHOR,
-                    $acl::ROLE_REVIEWER,
-                ],
+                $backendRolesExceptResearcher,
                 [
                     \Translate\Controller\Admin\IndexController::class,
                 ],
@@ -82,14 +100,10 @@ class Module extends AbstractModule
                     'delete',
                     'delete-confirm',
                     'batch-edit',
-                    'batch-delete',
                 ]
             )
             ->allow(
-                [
-                    $acl::ROLE_AUTHOR,
-                    $acl::ROLE_REVIEWER,
-                ],
+                $backendRolesExceptResearcher,
                 [
                     \Translate\Api\Adapter\TranslateAdapter::class,
                 ],
@@ -98,70 +112,31 @@ class Module extends AbstractModule
                     'update',
                     'delete',
                     'batch_update',
-                    'batch_delete',
                 ]
             )
             ->allow(
-                [
-                    $acl::ROLE_AUTHOR,
-                    $acl::ROLE_REVIEWER,
-                ],
+                $backendRolesExceptResearcher,
                 [
                     \Translate\Entity\Text::class,
                     \Translate\Entity\Translate::class,
-                ],
-                [
-                    'read',
-                    'create',
                 ]
             )
             ->allow(
+                $backendRolesAdmins,
                 [
-                    $acl::ROLE_AUTHOR,
+                    \Translate\Controller\Admin\IndexController::class,
                 ],
                 [
-                    \Translate\Entity\Translate::class,
-                ],
-                [
-                    'update',
-                    'delete',
-                ],
-                new OwnsEntityAssertion()
-            )
-            ->allow(
-                [
-                    $acl::ROLE_REVIEWER,
-                ],
-                [
-                    \Translate\Entity\Translate::class,
-                ],
-                [
-                    'update',
+                    'batch-delete',
                 ]
             )
             ->allow(
-                [
-                    $acl::ROLE_REVIEWER,
-                ],
-                [
-                    \Translate\Entity\Translate::class,
-                ],
-                [
-                    'delete',
-                ],
-                new OwnsEntityAssertion()
-            )
-
-            // Editor, Supervisor and SuperAdmin have all rights.
-            ->allow(
-                [
-                    $acl::ROLE_EDITOR,
-                    $acl::ROLE_SITE_ADMIN,
-                    $acl::ROLE_GLOBAL_ADMIN,
-                ],
+                $backendRolesAdmins,
                 [
                     \Translate\Api\Adapter\TranslateAdapter::class,
-                    \Translate\Entity\Translate::class,
+                ],
+                [
+                    'batch_delete',
                 ]
             )
         ;
