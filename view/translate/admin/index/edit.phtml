@@ -1,0 +1,38 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Translate\Form\TranslationForm $form
+ * @var \Translate\Api\Representation\TranslationRepresentation $translation
+ * @var \Translate\Api\Representation\TranslationRepresentation $resource
+ */
+
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$assetUrl = $plugins->get('assetUrl');
+
+$this->htmlElement('body')->appendAttribute('class', 'translations edit');
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/translate-admin.css', 'Translate'));
+
+$deleteButton = $translation->userIsAllowed('delete')
+    ? '<a href="#" class="delete button">' . $translate('Delete') . '</a>'
+    : null;
+?>
+
+<?= $this->pageTitle($translation->displayTitle(), 1, $translate('Translations'), $translate('Edit')) ?>
+
+<?php $this->trigger('view.edit.before'); ?>
+
+<?= $this->partial('translate/admin/index/form', [
+    'form' => $form,
+    'translation' => $translation,
+    'resource' => $translation,
+    'action' => 'edit',
+    'submitLabel' => $translate('Save'),
+    'deleteButton' => $deleteButton,
+]) ?>
+
+<?= $this->deleteConfirm($translation, 'translation') ?>
+
+<?php $this->trigger('view.edit.after'); ?>

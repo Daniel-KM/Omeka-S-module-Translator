@@ -1,0 +1,74 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Translate\Api\Representation\TranslationRepresentation $translation
+ * @var \Translate\Api\Representation\TranslationRepresentation $resource
+ * @var bool $linkTitle
+ */
+
+$plugins = $this->getHelperPluginManager();
+$i18n = $plugins->get('i18n');
+$escape = $plugins->get('escapeHtml');
+$translate = $plugins->get('translate');
+
+$this->htmlElement('body')->appendAttribute('class', 'translations show');
+
+$owner = $translation->owner();
+?>
+
+<div class="resource-details">
+    <?php if ($linkTitle): ?>
+    <h3 class="o-title"><?= $resource->link($resource->displayTitle()) ?></h3>
+    <?php else: ?>
+    <h3 class="o-title"><?= $escape($resource->displayTitle()) ?></h3>
+    <?php endif; ?>
+    <div class="meta-group">
+        <h4><?= $translate('ID') ?></h4>
+        <div class="value"><?= $resource->id() ?></div>
+    </div>
+    <div class="meta-group">
+        <h4><?= $translate('Owner') ?></h4>
+        <div class="value"><?= $owner ? $escape($owner->name()) : $translate('None') ?></div>
+    </div>
+    <div class="meta-group">
+        <h4><?= $translate('Slug') ?></h4>
+        <div class="value"><?= $escape($resource->slug()) ?></div>
+    </div>
+    <div class="meta-group">
+        <h4><?= $translate('Manage multiple labels by code') ?></h4>
+        <div class="value"><?= $translation->isAssociative() ? $translate('No') : $translate('Yes') ?></div>
+    </div>
+    <?php if ($v = $translation->lang()): ?>
+    <div class="meta-group">
+        <h4><?= $translate('Language') ?></h4>
+        <div class="value"><?= $escape($v) ?></div>
+    </div>
+    <?php endif; ?>
+    <?php if ($v = $translation->source()): ?>
+    <div class="meta-group">
+        <h4><?= $translate('Source') ?></h4>
+        <div class="value"><?= $escape($v) ?></div>
+    </div>
+    <?php endif; ?>
+    <?php if ($v = $translation->comment()): ?>
+    <div class="meta-group">
+        <h4><?= $translate('Comment') ?></h4>
+        <div class="value"><?= $escape($v) ?></div>
+    </div>
+    <?php endif; ?>
+    <div class="meta-group">
+        <h4><?= $translate('Created') ?></h4>
+        <div class="value"><?= $escape($i18n->dateFormat($translation->created())) ?></div>
+    </div>
+    <?php if ($modified = $translation->modified()): ?>
+    <div class="meta-group">
+        <h4><?= $translate('Modified') ?></h4>
+        <div class="value"><?= $escape($i18n->dateFormat($modified)) ?></div>
+    </div>
+    <?php endif; ?>
+    <div class="meta-group">
+        <h4><?= $translate('Total codes') ?></h4>
+        <div class="value"><?= $translation->codeCount() ?></div>
+    </div>
+    <?php $this->trigger('view.details', array('entity' => $resource)); ?>
+</div>

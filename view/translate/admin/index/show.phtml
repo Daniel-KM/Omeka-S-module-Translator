@@ -1,0 +1,100 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Translate\Api\Representation\TranslationRepresentation $translation
+ * @var \Translate\Api\Representation\TranslationRepresentation $resource
+ */
+
+$plugins = $this->getHelperPluginManager();
+$i18n = $plugins->get('i18n');
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+
+$this->htmlElement('body')->appendAttribute('class', 'translations show');
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/translate-admin.css', 'Translate'));
+
+$owner = $translation->owner();
+?>
+
+<?= $this->pageTitle($translation->displayTitle(), 1, $translate('Translations')) ?>
+
+<div id="page-actions">
+    <?php if ($translation->userIsAllowed('update')): ?>
+    <?= $translation->link($translate('Edit translation'), 'edit', ['class' => 'button']) ?>
+    <?php endif; ?>
+</div>
+
+<?php $this->trigger('view.show.before'); ?>
+
+<div id="item-metadata">
+    <dl class="translation-resource">
+        <div class="meta-group">
+            <dt><?= $translate('ID') ?></dt>
+            <dd class="value"><?= $translation->id() ?></dd>
+            <dt><?= $translate('Owner') ?></dt>
+            <dd class="value"><?= $owner ? $escape($owner->name()) : $translate('None') ?></dd>
+            <dt><?= $translate('Slug') ?></dt>
+            <dd class="value"><?= $escape($translation->slug()) ?></dd>
+            <dt><?= $translate('Manage multiple labels by code') ?></dt>
+            <dd class="value"><?= $escape($translation->isAssociative() ? $translate('No') : $translate('Yes')) ?></dd>
+            <?php if ($v = $translation->lang()): ?>
+            <dt><?= $translate('Language') ?></dt>
+            <dd class="value"><?= $escape($v) ?></dd>
+            <?php endif; ?>
+            <?php if ($v = $translation->source()): ?>
+            <dt><?= $translate('Source') ?></dt>
+            <dd class="value"><?= $escape($v) ?></dd>
+            <?php endif; ?>
+            <?php if ($v = $translation->comment()): ?>
+            <dt><?= $translate('Comment') ?></dt>
+            <dd class="value"><?= $escape($v) ?></dd>
+            <?php endif; ?>
+            <dt><?= $translate('Created') ?></dt>
+            <dd class="value"><?= $escape($i18n->dateFormat($translation->created())) ?></dd>
+            <?php if ($modified = $translation->modified()): ?>
+            <dt><?= $translate('Modified') ?></dt>
+            <dd class="value"><?= $escape($i18n->dateFormat($modified)) ?></dd>
+            <?php endif; ?>
+        </div>
+    </dl>
+    <?php if ($translation->isAssociative() && $translation->codeCount()): ?>
+    <table class="translationsaw" data-translationsaw-mode="stack">
+        <thead>
+            <th><?= $translate('Code') ?></th>
+            <th><?= $translate('Label') ?></th>
+        </thead>
+        <tbody>
+            <?php foreach($translation->codesAssociative() as $code => $label): ?>
+            <tr>
+                <td><?= $escape($code) ?></td>
+                <td><?= $escape($label) ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php elseif ($translation->codeCount()): ?>
+    <table class="translationsaw" data-translationsaw-mode="stack">
+        <thead>
+            <th><?= $translate('Code') ?></th>
+            <th><?= $translate('Label') ?></th>
+            <th><?= $translate('Lang') ?></th>
+        </thead>
+        <tbody>
+            <?php foreach($translation->codesData() as $codeData): ?>
+            <tr>
+                <td><?= $escape($codeData['code']) ?></td>
+                <td><?= $escape($codeData['label']) ?></td>
+                <td><?= $escape($codeData['lang']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php else: ?>
+    <p><?= $translate('No codes') ?></p>
+    <?php endif; ?>
+</div>
+
+<?php $this->trigger('view.show.after'); ?>

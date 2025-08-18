@@ -1,0 +1,13 @@
+CREATE TABLE `translation` (
+    `id` INT AUTO_INCREMENT NOT NULL,
+    `lang` VARCHAR(190) NOT NULL,
+    `string` LONGTEXT NOT NULL,
+    `locale` VARCHAR(8) NOT NULL,
+    `translation` LONGTEXT NOT NULL,
+    `automatic` TINYINT(1) DEFAULT 0 NOT NULL,
+    `reviewed` TINYINT(1) DEFAULT 0 NOT NULL,
+    INDEX IDX_B469456F9EBEB2A9310984624180C698 (`string`(190), `lang`, `locale`),
+    INDEX IDX_B469456F31098462 (`lang`),
+    INDEX IDX_B469456F4180C698 (`locale`),
+    PRIMARY KEY(`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB;

@@ -1,0 +1,11 @@
+@media all {
+    header nav .translate::before,
+    .translate .subhead::before,
+    .translates .subhead::before,
+    .translate .no-resources::before,
+    .translates .no-resources::before,
+    #translate .no-translate::before,
+    .translate .no-resources::before {
+        content:"\f1ab"; /* fas fa-language */
+    }
+}

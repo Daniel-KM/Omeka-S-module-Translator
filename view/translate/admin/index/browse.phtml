@@ -1,0 +1,193 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Translate\Api\Representation\TranslationRepresentation[] $translations
+ * @var \Translate\Api\Representation\TranslationRepresentation[] $resources
+ * @var \Omeka\Form\ConfirmForm $formDeleteSelected
+ * @var \Omeka\Form\ConfirmForm $formDeleteAll
+ * @var array $returnQuery
+ */
+
+$plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+$hyperlink = $plugins->get('hyperlink');
+
+$this->htmlElement('body')->appendAttribute('class', 'translations browse');
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/translate-admin.css', 'Translate'));
+
+$canBatchUpdate = $this->userIsAllowed(\Translate\Api\Adapter\TranslationAdapter::class, 'batch_update');
+$canBatchDeleteAll = $this->userIsAllowed(\Translate\Api\Adapter\TranslationAdapter::class, 'batch_delete_all');
+?>
+
+<?= $this->pageTitle(null, 1, $translate('Translate')) ?>
+
+<div id="page-actions">
+    <?php if ($this->userIsAllowed(\Translate\Api\Adapter\TranslationAdapter::class, 'create')): ?>
+    <?= $hyperlink($translate('Add new translation'), $this->url(null, ['action' => 'add'], true), ['class' => 'button']) ?>
+    <?php endif; ?>
+</div>
+
+<?php $this->trigger('view.browse.before'); ?>
+
+<?php if ($translations): ?>
+
+<form method="post" id="batch-form" class="disable-unsaved-warning">
+    <?php if ($canBatchUpdate): ?>
+    <div class="batch-inputs">
+        <select class="batch-actions-select" aria-label="<?= $translate('Batch actions') ?>">
+            <option value="default"><?= $translate('Batch actions') ?></option>
+            <option value="delete-selected" disabled="disabled"><?= $translate('Delete selected') ?></option>
+            <?php if ($canBatchDeleteAll): ?>
+            <option value="delete-all"><?= $translate('Delete all') ?></option>
+            <?php endif; ?>
+        </select>
+        <div class="batch-actions">
+            <button type="button" class="default active button" disabled="disabled"><?= $translate('Go') ?></button>
+            <input type="hidden" name="query" class="batch-query" value="<?= $escape(json_encode($this->params()->fromQuery())); ?>">
+            <a class="delete button sidebar-content delete-selected" data-sidebar-selector="#sidebar-delete-selected"><?= $translate('Go') ?></a>
+            <a class="delete button sidebar-content delete-all" data-sidebar-selector="#sidebar-delete-all"><?= $translate('Go') ?></a>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <table class="tablesaw batch-edit" data-tablesaw-mode="stack">
+        <thead>
+            <tr>
+                <th><input type="checkbox" class="select-all" aria-label="<?= $translate('Select all') ?>"><?= $translate('Title') ?></th>
+                <?= $this->browse()->renderHeaderRow('translations') ?>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($translations as $translation): ?>
+            <tr>
+                <td>
+                    <?php if ($canBatchUpdate && ($translation->userIsAllowed('update') || $translation->userIsAllowed('delete'))): ?>
+                    <input type="checkbox" name="resource_ids[]" value="<?= $translation->id(); ?>" aria-label="<?= $translate('Select translation') ?>">
+                    <?php endif; ?>
+                    <?= $translation->link($translation->displayTitle()) ?>
+                    <ul class="actions">
+                        <?php if ($translation->userIsAllowed('update')): ?>
+                        <li><?= $translation->link('', 'edit', [
+                            'class' => 'o-icon-edit',
+                            'title' => $translate('Edit'),
+                        ]); ?></li>
+                        <?php endif; ?>
+                        <?php if ($translation->userIsAllowed('delete')): ?>
+                        <li><?= $hyperlink('', '#', [
+                            'data-sidebar-selector' => '#sidebar',
+                            'data-sidebar-content-url' => $translation->url('delete-confirm'),
+                            'class' => 'o-icon-delete sidebar-content',
+                            'title' => $translate('Delete'),
+                        ]); ?></li>
+                        <?php endif; ?>
+                        <li><?= $hyperlink('', '#', [
+                            'data-sidebar-selector' => '#sidebar',
+                            'data-sidebar-content-url' => $translation->url('show-details'),
+                            'class' => 'o-icon-more sidebar-content',
+                            'title' => $translate('Details'),
+                        ]); ?></li>
+                    </ul>
+                </td>
+                <?= $this->browse()->renderContentRow('translations', $translation) ?>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+
+</form>
+
+<?php $this->trigger('view.browse.after'); ?>
+
+<div class="browse-controls">
+    <?= $this->pagination() ?>
+</div>
+
+<div id="sidebar" class="sidebar">
+    <?= $hyperlink('', '#', [
+        'class' => 'sidebar-close o-icon-close',
+        'title' => $translate('Close'),
+    ]); ?>
+    <div class="sidebar-content"></div>
+</div>
+
+<?php if ($canBatchUpdate): ?>
+
+<div id="sidebar-delete-selected" class="sidebar">
+    <?= $hyperlink('', '#', [
+        'class' => 'sidebar-close o-icon-close',
+        'title' => $translate('Close'),
+    ]) ?>
+    <div class="sidebar-content">
+        <div id="sidebar-confirm">
+            <h3><?= $translate('Delete translations') ?></h3>
+            <p><?= $translate('Are you sure you would like to delete the selected translations?') ?></p>
+            <p class="error"><?= sprintf(
+                $translate('%1$s: this action will permanently delete %2$s translations and cannot be undone.'),
+                sprintf('<strong>%s</strong>', $translate('Warning')),
+                '<strong><span id="delete-selected-count"></span></strong>'
+            ) ?></p>
+            <?= $this->form($formDeleteSelected) ?>
+        </div>
+    </div>
+</div>
+
+<?php if ($canBatchDeleteAll): ?>
+<div id="sidebar-delete-all" class="sidebar">
+    <?=  $hyperlink('', '#', [
+        'class' => 'sidebar-close o-icon-close',
+        'title' => $translate('Close'),
+    ]) ?>
+    <div class="sidebar-content">
+        <div id="sidebar-confirm">
+            <h3><?= $translate('Delete translations') ?></h3>
+            <p><?= $translate('Are you sure you would like to delete all translations on all pages of this result?') ?></p>
+            <p class="error"><?= sprintf(
+                $translate('%1$s: this action will permanently delete %2$s translations and cannot be undone.'),
+                sprintf('<strong>%s</strong>', $translate('Warning')),
+                sprintf('<strong>%s</strong>', number_format($this->pagination()->getPaginator()->getTotalCount()))
+            ) ?></p>
+            <label><input type="checkbox" name="confirm-delete-all-check"> <?= $translate('Are you sure?') ?></label>
+            <?= $this->form($formDeleteAll) ?>
+        </div>
+    </div>
+</div>
+    <?php endif; ?>
+
+<?php endif; ?>
+
+<script>
+// Complete the batch delete form after confirmation.
+$('#confirm-delete-selected, #confirm-delete-all').on('submit', function(e) {
+    var confirmForm = $(this);
+    if ('confirm-delete-all' === this.id) {
+        confirmForm.append($('.batch-query').clone());
+    } else {
+        $('#batch-form').find('input[name="resource_ids[]"]:checked').each(function() {
+            confirmForm.append($(this).clone().prop('disabled', false).attr('type', 'hidden'));
+        });
+    }
+});
+$('.delete-all').on('click', function(e) {
+    Omeka.closeSidebar($('#sidebar-delete-selected'));
+});
+$('.delete-selected').on('click', function(e) {
+    Omeka.closeSidebar($('#sidebar-delete-all'));
+    var inputs = $('input[name="resource_ids[]"]');
+    $('#delete-selected-count').text(inputs.filter(':checked').length);
+});
+$('#sidebar-delete-all').on('click', 'input[name="confirm-delete-all-check"]', function(e) {
+    $('#confirm-delete-all input[type="submit"]').prop('disabled', this.checked ? false : true);
+});
+</script>
+
+<?php else: ?>
+
+<div class="no-resources">
+    <p><?= $translate('Omeka could not find any translations.') ?></p>
+</div>
+
+<?php endif; ?>
