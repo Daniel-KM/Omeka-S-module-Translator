@@ -4,21 +4,21 @@ namespace Translator\Service\ViewHelper;
 
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Translator\View\Helper\Translating;
+use Translator\View\Helper\Translation;
 
 /**
- * Service factory for the Translating view helper.
+ * Service factory for the Translation view helper.
  */
-class TranslatingFactory implements FactoryInterface
+class TranslationFactory implements FactoryInterface
 {
     /**
      * Create and return the Translation view helper.
      *
-     * @return Translating
+     * @return Translation
      */
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
-        return new Translating(
+        return new Translation(
             $services->get('Omeka\ApiManager')
         );
     }

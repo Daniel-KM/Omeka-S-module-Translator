@@ -1,12 +1,10 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translator\Api\Representation\TranslateRepresentation $translate
- * @var \Translator\Api\Representation\TranslateRepresentation $resource
+ * @var \Translator\Api\Representation\TranslationRepresentation $translation
+ * @var \Translator\Api\Representation\TranslationRepresentation $resource
  * @var bool $linkTitle
  */
-
-$translation = $translate;
 
 $plugins = $this->getHelperPluginManager();
 $escape = $plugins->get('escapeHtml');
@@ -31,7 +29,7 @@ $this->htmlElement('body')->appendAttribute('class', 'translations show');
     </div>
     <div class="meta-group">
         <h4><?= $translate('Language translation') ?></h4>
-        <div class="value"><?= $escape($resource->langTranslation()) ?></div>
+        <div class="value"><?= $escape($resource->langTarget()) ?></div>
     </div>
     <div class="meta-group">
         <h4><?= $translate('Status') ?></h4>

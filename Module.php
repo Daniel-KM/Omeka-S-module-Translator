@@ -249,7 +249,7 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [
-                    \Translator\Api\Adapter\TranslateAdapter::class,
+                    \Translator\Api\Adapter\TranslationAdapter::class,
                 ],
                 [
                     'read',
@@ -260,7 +260,7 @@ class Module extends AbstractModule
                 null,
                 [
                     \Translator\Entity\Text::class,
-                    \Translator\Entity\Translate::class,
+                    \Translator\Entity\Translation::class,
                 ],
                 [
                     'read',
@@ -300,7 +300,7 @@ class Module extends AbstractModule
             ->allow(
                 $backendRolesExceptResearcher,
                 [
-                    \Translator\Api\Adapter\TranslateAdapter::class,
+                    \Translator\Api\Adapter\TranslationAdapter::class,
                 ],
                 [
                     'create',
@@ -313,7 +313,7 @@ class Module extends AbstractModule
                 $backendRolesExceptResearcher,
                 [
                     \Translator\Entity\Text::class,
-                    \Translator\Entity\Translate::class,
+                    \Translator\Entity\Translation::class,
                 ]
             )
             ->allow(
@@ -328,7 +328,7 @@ class Module extends AbstractModule
             ->allow(
                 $backendRolesAdmins,
                 [
-                    \Translator\Api\Adapter\TranslateAdapter::class,
+                    \Translator\Api\Adapter\TranslationAdapter::class,
                 ],
                 [
                     'batch_delete',
@@ -701,7 +701,7 @@ class Module extends AbstractModule
         // The results contain only new translations, because existing ones were
         // skipped above.
         $api = $services->get('Omeka\ApiManager');
-        $api->batchCreate('translates', $results, [], ['continueOnError' => true]);
+        $api->batchCreate('translations', $results, [], ['continueOnError' => true]);
     }
 
     /**
@@ -921,7 +921,7 @@ class Module extends AbstractModule
         // FIXME Search empty language source.
         $filteredTexts = [];
         foreach ($texts as $text) {
-            $existingTranslations = $api->search('translates', [
+            $existingTranslations = $api->search('translations', [
                 'string' => $text,
                 'lang_source' => $langSource,
                 'lang_target' => $langTarget,

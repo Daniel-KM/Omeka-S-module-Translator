@@ -5,7 +5,7 @@ namespace Translator;
 return [
     'api_adapters' => [
         'invokables' => [
-            'translates' => Api\Adapter\TranslateAdapter::class,
+            'translations' => Api\Adapter\TranslationAdapter::class,
         ],
     ],
     'entity_manager' => [
@@ -23,14 +23,14 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
-            'translating' => Service\ViewHelper\TranslatingFactory::class,
+            'translation' => Service\ViewHelper\TranslationFactory::class,
         ],
     ],
     'form_elements' => [
         'invokables' => [
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
-            Form\TranslateForm::class => Form\TranslateForm::class,
+            Form\TranslationForm::class => Form\TranslationForm::class,
         ],
     ],
     'controllers' => [
@@ -108,7 +108,7 @@ return [
     ],
     'column_defaults' => [
         'admin' => [
-            'translates' => [
+            'translations' => [
                 // ['type' => 'string'],
                 ['type' => 'lang_source'],
                 ['type' => 'lang_target'],
@@ -122,7 +122,7 @@ return [
     ],
     'browse_defaults' => [
         'admin' => [
-            'translates' => [
+            'translations' => [
                 'sort_by' => 'string',
                 'sort_order' => 'asc',
             ],
@@ -130,7 +130,7 @@ return [
     ],
     'sort_defaults' => [
         'admin' => [
-            'translates' => [
+            'translations' => [
                 'lang_source' => 'Language source', // @translate
                 'lang_target' => 'Language target', // @translate
                 'automatic' => 'Automatic', // @translate

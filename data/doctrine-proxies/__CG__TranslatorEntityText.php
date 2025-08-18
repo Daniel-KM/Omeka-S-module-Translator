@@ -67,10 +67,10 @@ class Text extends \Translator\Entity\Text implements \Doctrine\ORM\Proxy\Proxy
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'lang', 'string', 'translates'];
+            return ['__isInitialized__', 'id', 'lang', 'string', 'translations'];
         }
 
-        return ['__isInitialized__', 'id', 'lang', 'string', 'translates'];
+        return ['__isInitialized__', 'id', 'lang', 'string', 'translations'];
     }
 
     /**
@@ -239,12 +239,12 @@ class Text extends \Translator\Entity\Text implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getTranslates()
+    public function getTranslations()
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTranslates', []);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTranslations', []);
 
-        return parent::getTranslates();
+        return parent::getTranslations();
     }
 
     /**

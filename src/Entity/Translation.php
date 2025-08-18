@@ -15,8 +15,8 @@ use Omeka\Entity\AbstractEntity;
  * Furthermore, it allows to manage the case where there are multiple
  * translations for one string (The Queen => Die Königin, Ihre Majestät).
  *
- * Translates have no owner or linked data, like resource values. They should be
- * simple and fast, but not repetitive.
+ * Translations have no owner or linked data, like resource values. They should
+ * be simple and fast, but not repetitive.
  *
  * @todo Replace string by value id? The value id are not stable in omeka. The storage of the string avoids some duplication too (but some main fields like title and description are generally unique).
  *
@@ -33,7 +33,7 @@ use Omeka\Entity\AbstractEntity;
  * @Table(
  *     indexes={
  *         @Index(
- *             name="idx_translate_lang",
+ *             name="idx_translation_lang",
  *             columns={
  *                 "lang"
  *             }
@@ -41,7 +41,7 @@ use Omeka\Entity\AbstractEntity;
  *     }
  * )
  */
-class Translate extends AbstractEntity
+class Translation extends AbstractEntity
 {
     /**
      * @var int
@@ -57,7 +57,7 @@ class Translate extends AbstractEntity
     /**
      * @ManyToOne(
      *     targetEntity="Translator\Entity\Text",
-     *     inversedBy="translates",
+     *     inversedBy="translations",
      *     cascade={"persist"}
      * )
      * @JoinColumn(

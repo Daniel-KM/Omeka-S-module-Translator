@@ -1,11 +1,9 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translator\Api\Representation\TranslateRepresentation $translate
- * @var \Translator\Api\Representation\TranslateRepresentation $resource
+ * @var \Translator\Api\Representation\TranslationRepresentation $translation
+ * @var \Translator\Api\Representation\TranslationRepresentation $resource
  */
-
-$translation = $translate;
 
 $plugins = $this->getHelperPluginManager();
 $escape = $plugins->get('escapeHtml');

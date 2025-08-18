@@ -18,7 +18,7 @@ class StringSource implements ColumnTypeInterface
 
     public function getResourceTypes() : array
     {
-        return ['translates'];
+        return ['translations'];
     }
 
     public function getMaxColumns() : ?int

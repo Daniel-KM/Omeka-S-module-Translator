@@ -6,19 +6,14 @@ use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 
-class TranslateForm extends Form
+class TranslationForm extends Form
 {
-    /**
-     * @var \Translator\Api\Adapter\TranslateAdapter
-     */
-    protected $apiAdapterTranslate;
-
     public function init(): void
     {
         // TODO Validate unicity of string/lang source/lang target for translation (see module Table).
 
         $this
-            ->setAttribute('id', 'translate-form')
+            ->setAttribute('id', 'translation-form')
 
             ->add([
                 'name' => 'o:lang_source',

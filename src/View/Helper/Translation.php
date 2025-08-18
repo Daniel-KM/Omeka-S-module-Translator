@@ -4,9 +4,9 @@ namespace Translator\View\Helper;
 
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Manager as ApiManager;
-// use Translator\Api\Representation\TranslateRepresentation;
+// use Translator\Api\Representation\TranslationRepresentation;
 
-class Translating extends AbstractHelper
+class Translation extends AbstractHelper
 {
     /**
      * @var \Omeka\Api\Manager
@@ -19,12 +19,12 @@ class Translating extends AbstractHelper
     }
 
     /**
-     * Get the translate representation.
+     * Get the translation representation.
      *
      * @param array $options
      * - as_representation (bool): false (default)
      *
-     * @return \Translator\Api\Representation\TranslateRepresentation|string|null
+     * @return \Translator\Api\Representation\TranslationRepresentation|string|null
      */
     public function __invoke(
         $idOrString,
@@ -39,8 +39,8 @@ class Translating extends AbstractHelper
         if (is_numeric($idOrString)) {
             try {
                 return $asRepresentation
-                    ? $this->api->read('translates', ['id' => $idOrString])->getContent()
-                    : $this->api->read('translates', ['id' => $idOrString], ['returnScalar' => 'translation'])->getContent();
+                    ? $this->api->read('translations', ['id' => $idOrString])->getContent()
+                    : $this->api->read('translations', ['id' => $idOrString], ['returnScalar' => 'translation'])->getContent();
             } catch (\Exception $e) {
                 return null;
             }
@@ -65,8 +65,8 @@ class Translating extends AbstractHelper
 
         try {
             return $asRepresentation
-                ? $this->api->read('translates', $data)->getContent()
-                : $this->api->read('translates', $data, ['returnScalar' => 'translation'])->getContent();
+                ? $this->api->read('translations', $data)->getContent()
+                : $this->api->read('translations', $data, ['returnScalar' => 'translation'])->getContent();
         } catch (\Exception $e) {
             return null;
         }

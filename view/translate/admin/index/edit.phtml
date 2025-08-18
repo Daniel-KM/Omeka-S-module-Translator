@@ -1,18 +1,16 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translator\Form\TranslateForm $form
- * @var \Translator\Api\Representation\TranslateRepresentation $translate
- * @var \Translator\Api\Representation\TranslateRepresentation $resource
+ * @var \Translator\Form\TranslationForm $form
+ * @var \Translator\Api\Representation\TranslationRepresentation $translation
+ * @var \Translator\Api\Representation\TranslationRepresentation $resource
  */
-
-$translation = $translate;
 
 $plugins = $this->getHelperPluginManager();
 $translate = $plugins->get('translate');
 $assetUrl = $plugins->get('assetUrl');
 
-$this->htmlElement('body')->appendAttribute('class', 'translates edit');
+$this->htmlElement('body')->appendAttribute('class', 'translations edit');
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/translator-admin.css', 'Translator'));
@@ -28,13 +26,13 @@ $deleteButton = $translate->userIsAllowed('delete')
 
 <?= $this->partial('translate/admin/index/form', [
     'form' => $form,
-    'translate' => $translation,
+    'translation' => $translation,
     'resource' => $translation,
     'action' => 'edit',
     'submitLabel' => $translate('Save'),
     'deleteButton' => $deleteButton,
 ]) ?>
 
-<?= $this->deleteConfirm($translation, 'translate') ?>
+<?= $this->deleteConfirm($translation, 'translation') ?>
 
 <?php $this->trigger('view.edit.after'); ?>

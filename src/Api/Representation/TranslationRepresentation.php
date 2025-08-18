@@ -5,21 +5,21 @@ namespace Translator\Api\Representation;
 use DateTime;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
 
-class TranslateRepresentation extends AbstractEntityRepresentation
+class TranslationRepresentation extends AbstractEntityRepresentation
 {
     /**
-     * @var \Translator\Entity\Translate
+     * @var \Translator\Entity\Translation
      */
     protected $resource;
 
     public function getControllerName()
     {
-        return 'translate';
+        return 'translation';
     }
 
     public function getJsonLdType()
     {
-        return 'o:Translate';
+        return 'o:Translation';
     }
 
     /**
@@ -32,6 +32,10 @@ class TranslateRepresentation extends AbstractEntityRepresentation
      * But in that case, it will be a TextRepresentation, but the aim is only to
      * get translation for now. The separation in two tables is more internal
      * and technical and is not useful in userland for now.
+     *
+     * @todo Make similar the Translation of Internationalisation and Translator.
+     * @see \Internationalisation\Api\Representation\TranslatingRepresentation
+     * @see \Translator\Api\Representation\TranslationRepresentation
      *
      * {@inheritDoc}
      * @see \Omeka\Api\Representation\AbstractResourceRepresentation::getJsonLd()
@@ -58,6 +62,7 @@ class TranslateRepresentation extends AbstractEntityRepresentation
                     '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
                 ] : null,
             /*
+            // TODO Another way to represent (and in case of multiple modes of language, add it in key). See above: TextRepresentation.
             'o:string' => [
                 '@value' => $this->string(),
                 'o:lang' => $this->langSource(),
@@ -70,7 +75,7 @@ class TranslateRepresentation extends AbstractEntityRepresentation
             ],
             */
             /*
-            // TODO Another way to represent (and in case of multiple modes of language, add it in key). See above: TextRepresentation.
+            // TODO Another way to represent Resource representation. And in case of multiple modes of language, add it in key.
             'label' => [
                 'en' => $this->string()
                 'de' => $this->translation(),

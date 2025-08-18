@@ -11,7 +11,7 @@ use Omeka\Entity\EntityInterface;
 use Omeka\Stdlib\ErrorStore;
 use Translator\Entity\Text;
 
-class TranslateAdapter extends AbstractEntityAdapter
+class TranslationAdapter extends AbstractEntityAdapter
 {
     use CommonAdapterTrait;
 
@@ -61,17 +61,17 @@ class TranslateAdapter extends AbstractEntityAdapter
 
     public function getResourceName()
     {
-        return 'translates';
+        return 'translations';
     }
 
     public function getRepresentationClass()
     {
-        return \Translator\Api\Representation\TranslateRepresentation::class;
+        return \Translator\Api\Representation\TranslationRepresentation::class;
     }
 
     public function getEntityClass()
     {
-        return \Translator\Entity\Translate::class;
+        return \Translator\Entity\Translation::class;
     }
 
     public function buildQuery(QueryBuilder $qb, array $query): void
@@ -114,7 +114,7 @@ class TranslateAdapter extends AbstractEntityAdapter
         EntityInterface $entity,
         ErrorStore $errorStore
     ): void {
-        /** @var \Translator\Entity\Translate $entity */
+        /** @var \Translator\Entity\Translation $entity */
 
         // The data are checked in validateRequest().
 
@@ -140,12 +140,12 @@ class TranslateAdapter extends AbstractEntityAdapter
                         // Remove existing text if not linked to another,
                         // translation.
                         // TODO Copy and keep existing translation.
-                        if ($existingText->getTranslates()->count() <= 1) {
+                        if ($existingText->getTranslations()->count() <= 1) {
                             $this->getEntityManager()->remove($existingText);
                         }
                     } else {
                         // Keep existing text if not linked to another translation.
-                        if ($existingText->getTranslates()->count() > 1) {
+                        if ($existingText->getTranslations()->count() > 1) {
                             $text = (new Text())->setString($string)->setLang($lang);
                         } else {
                             $text = $existingText->setString($string)->setLang($lang);
@@ -175,7 +175,7 @@ class TranslateAdapter extends AbstractEntityAdapter
 
     public function validateEntity(EntityInterface $entity, ErrorStore $errorStore)
     {
-        /** @var \Translator\Entity\Translate $entity */
+        /** @var \Translator\Entity\Translation $entity */
 
         $text = $entity->getText();
         $langTarget = $entity->getLang();

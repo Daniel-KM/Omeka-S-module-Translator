@@ -83,7 +83,7 @@ class Text extends AbstractEntity
      * @var \Doctrine\Common\Collections\ArrayCollection
      *
      * @OneToMany(
-     *     targetEntity="Translator\Entity\Translate",
+     *     targetEntity="Translator\Entity\Translation",
      *     mappedBy="text",
      *     orphanRemoval=true,
      *     cascade={"persist", "remove", "detach"}
@@ -94,11 +94,11 @@ class Text extends AbstractEntity
      *     }
      * )
      */
-    protected $translates;
+    protected $translations;
 
     public function __construct()
     {
-        $this->translates = new ArrayCollection();
+        $this->translations = new ArrayCollection();
     }
 
     public function getId()
@@ -131,8 +131,8 @@ class Text extends AbstractEntity
     /**
      * @return \Doctrine\Common\Collections\ArrayCollection|\Doctrine\ORM\PersistentCollection
      */
-    public function getTranslates()
+    public function getTranslations()
     {
-        return $this->translates;
+        return $this->translations;
     }
 }
