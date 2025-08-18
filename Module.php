@@ -887,30 +887,32 @@ class Module extends AbstractModule
         return array_values(array_unique($result, SORT_REGULAR));
     }
 
-    protected function filterExistingTranslations(array $texts, ?string $langSource, string $langTarget): array
+    protected function filterExistingTranslations(array $strings, ?string $langSource, string $langTarget): array
     {
         /**
          * @var \Omeka\Api\Manager $api
+         * @todo Use direct doctrine query? There is no need for api events.
          */
         $services = $this->getServiceLocator();
         $api = $services->get('Omeka\ApiManager');
 
-        // TODO Simplify to avoid the loop.
-        $filteredTexts = [];
-        foreach ($texts as $text) {
-            $existingTranslations = $api->search('translations', [
-                'string' => $text,
-                // An empty lang source should be wrapped with single quotes to
-                // be searchable.
-                'lang_source' => $langSource ?: "''",
-                'lang_target' => $langTarget,
-            ])->getContent();
-            if (empty($existingTranslations)) {
-                $filteredTexts[] = $text;
-            }
-        }
+        /** @var \Translator\Entity\Translation $existingTranslations */
+        $existingTranslations = $api->search('translations', [
+            'string' => $strings,
+            // An empty lang source should be wrapped with single quotes to
+            // be searchable.
+            'lang_source' => $langSource ?: "''",
+            'lang_target' => $langTarget,
+        ], ['responseContent' => 'resource'])->getContent();
 
-        return $filteredTexts;
+        // Extract the strings of existing translations.
+        $existingStrings = array_map(
+            fn (\Translator\Entity\Translation $translation) => $translation->getText()->getString(),
+            $existingTranslations
+        );
+
+        // Filter strings that have a translation.
+        return array_diff($strings, $existingStrings);
     }
 
     protected function translateDeepL(array $texts, ?string $langSource, string $langTarget, array $options = []): array
