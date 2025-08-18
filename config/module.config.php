@@ -22,8 +22,8 @@ return [
         ],
     ],
     'view_helpers' => [
-        'invokables' => [
-            'translating' => View\Helper\Translating::class,
+        'factories' => [
+            'translating' => Service\ViewHelper\TranslatingFactory::class,
         ],
     ],
     'form_elements' => [

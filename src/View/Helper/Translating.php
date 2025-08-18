@@ -3,20 +3,44 @@
 namespace Translate\View\Helper;
 
 use Laminas\View\Helper\AbstractHelper;
-use Translate\Api\Representation\TranslateRepresentation;
+use Omeka\Api\Manager as ApiManager;
+// use Translate\Api\Representation\TranslateRepresentation;
 
 class Translating extends AbstractHelper
 {
     /**
-     * Get the translate representation.
+     * @var \Omeka\Api\Manager
      */
-    public function __invoke($idOrString, ?string $langSource = null, ?string $langTarget = null): ?TranslateRepresentation
+    protected $api;
+
+    public function __construct(ApiManager $api)
     {
+        $this->api = $api;
+    }
+
+    /**
+     * Get the translate representation.
+     *
+     * @param array $options
+     * - as_representation (bool): false (default)
+     *
+     * @return \Translate\Api\Representation\TranslateRepresentation|string|null
+     */
+    public function __invoke(
+        $idOrString,
+        ?string $langSource = null,
+        ?string $langTarget = null,
+        array $options = []
+    ) {
         $view = $this->getView();
+
+        $asRepresentation = !empty($options['as_representation']);
 
         if (is_numeric($idOrString)) {
             try {
-                return $view->api()->read('translates', ['id' => $idOrString])->getContent();
+                return $asRepresentation
+                    ? $this->api->read('translates', ['id' => $idOrString])->getContent()
+                    : $this->api->read('translates', ['id' => $idOrString], ['returnScalar' => 'translation'])->getContent();
             } catch (\Exception $e) {
                 return null;
             }
@@ -33,14 +57,16 @@ class Translating extends AbstractHelper
             }
         }
 
+        $data = [
+            'langSource' => $langSource,
+            'langTarget' => $langTarget,
+            'string' => $idOrString,
+        ];
+
         try {
-            return $this->getView()->api()
-                ->read('translates', [
-                    'lang_source' => $langSource,
-                    'lang_target' => $langTarget,
-                    'string' => $idOrString,
-                ])
-                ->getContent();
+            return $asRepresentation
+                ? $this->api->read('translates', $data)->getContent()
+                : $this->api->read('translates', $data, ['returnScalar' => 'translation'])->getContent();
         } catch (\Exception $e) {
             return null;
         }
