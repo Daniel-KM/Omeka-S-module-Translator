@@ -188,6 +188,7 @@ return [
         'site_settings' => [
             // Hidden site settings, adapted to site locale.
             'translator_lang_pairs' => [],
+            'translator_lang_fallbacks' => [],
         ],
     ],
 ];

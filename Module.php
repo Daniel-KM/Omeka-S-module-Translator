@@ -501,6 +501,10 @@ class Module extends AbstractModule
 
     public function translateValue(ValueRepresentation $value): ?string
     {
+        static $currentLocale;
+        static $langTargets;
+        static $defaultLangSource;
+
         /**
          * @var \Omeka\Api\Manager $api
          * @var \Doctrine\DBAL\Connection $connection
@@ -521,7 +525,29 @@ class Module extends AbstractModule
         // checked. Of course, there is no need to do more check when the value
         // has the right language.
 
-        $localeSite = $this->getLocaleCurrentSite();
+        $services = $this->getServiceLocator();
+
+        if ($currentLocale === null) {
+            $localeSite = $this->getLocaleCurrentSite();
+
+            $siteSettings = $services->get('Omeka\Settings\Site');
+            try {
+                $langTargets = $siteSettings->get('translator_lang_fallbacks', []);
+            } catch (\Exception $e) {
+                $siteId = $this->getCurrentOrDefaultSiteId();
+                $langTargets = $siteId
+                    ? $siteSettings->get('translator_lang_fallbacks', [], $siteId)
+                    : null;
+            }
+
+            $settings = $services->get('Omeka\Settings');
+            $defaultLangSource = $settings->get('translator_lang_source_default') ?: null;
+        }
+
+        if (!$langTargets) {
+            return null;
+        }
+
         $isTranslatabelValue = $this->isTranslatableValue($value, $localeSite);
         if (!$isTranslatabelValue) {
             return null;
@@ -529,11 +555,8 @@ class Module extends AbstractModule
 
         $langSource = $value->lang();
         if (!$langSource) {
-            $services = $this->getServiceLocator();
-            $settings = $services->get('Omeka\Settings');
-            $defaultLangSource = $settings->get('translator_lang_source_default');
             if ($defaultLangSource === 'skip') {
-                return;
+                return null;
             }
             $langSource = $defaultLangSource;
         }
@@ -542,8 +565,6 @@ class Module extends AbstractModule
         $langSource = $langSource
             ? mb_strtolower(strtok(strtr($langSource, '_', '-'), '-'))
             : null;
-
-        $langTargets = $this->getLangTargets($localeSite);
 
         // TODO Update view helper Translation.
         // TODO Use orm or dbal to get translations? For multiple values: most of the time, there is only one record (show) or a list of titles (browse).
@@ -623,12 +644,9 @@ class Module extends AbstractModule
             try {
                 $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', []);
             } catch (\Exception $e) {
-                // Probably a background process.
-                // TODO Is the exception for current site fixed?
-                $site = $services->get('ControllerPluginManager')->get('currentSite')()
-                    ?: $services->get('ViewHelperManager')->get('defaultSite')();
-                if ($site) {
-                    $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', [], $site->id());
+                $siteId = $this->getCurrentOrDefaultSiteId();
+                if ($siteId) {
+                    $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', [], $siteId);
                 }
             }
         }
@@ -992,18 +1010,18 @@ class Module extends AbstractModule
     public function handleMainSettings(Event $event): void
     {
         $this->handleAnySettings($event, 'settings');
-        $this->prepareLangPairsBySite();
+        $this->prepareLangsBySite();
     }
 
     public function handleSiteSettings(Event $event): void
     {
         $this->handleAnySettings($event, 'site_settings');
-        $this->prepareLangPairsBySite();
+        $this->prepareLangsBySite();
     }
 
     public function handleSaveSitePost(Event $event): void
     {
-        $this->prepareLangPairsBySite();
+        $this->prepareLangsBySite();
     }
 
     /**
@@ -1012,7 +1030,7 @@ class Module extends AbstractModule
      * The pairs are stored by site, then, as a list, a list by source and a
      * list by target in order to manage different use cases quickly.
      */
-    protected function prepareLangPairsBySite(): void
+    protected function prepareLangsBySite(): void
     {
         /**
          * @var \Omeka\Api\Manager $api
@@ -1037,6 +1055,8 @@ class Module extends AbstractModule
         foreach ($siteIds as $siteId) {
             $siteLocale = mb_strtolower(strtr((string) $siteSettings->get('locale', null, $siteId))) ?: $mainLocale;
             $siteLocaleShort = strtok($siteLocale, '-');
+
+            // Prepare pairs of languages.
             $sitePairs = [];
             foreach ($pairs as $pair) {
                 if ($pair['target'] === $siteLocale || strtok($pair['target'], '-') === $siteLocaleShort) {
@@ -1045,8 +1065,38 @@ class Module extends AbstractModule
                     $sitePairs['target'][$pair['source']] = $pair['source'];
                 }
             }
-            $siteSettings->set('translator_lang_pairs', array_map('array_values', $sitePairs));
+            $siteSettings->set('translator_lang_pairs', array_map('array_values', $sitePairs), $siteId);
+
+            // Prepare automatic fallbacks.
+            $fallbacks = array_values(array_unique(
+                [-2 => $siteLocale, -1 => $siteLocaleShort]
+                + (self::$langsSupportedOutputShort[$siteLocaleShort] ?? [])
+            ));
+            $siteSettings->set('translator_lang_fallbacks', $fallbacks, $siteId);
         }
+    }
+
+    /**
+     * When there is a background job, the current site is not set, so it may
+     * throw an exception when the site is needed, for example for indexation.
+     * So when helper siteSetting() throw an error, the site id of this method
+     * can be used to force it. It should not be used early, because in some
+     * cases the default site is returned instead of the current site.
+     *
+     * @todo Is the exception for current site fixed?
+     */
+    protected function getCurrentOrDefaultSiteId(): ?int
+    {
+        static $siteId = false;
+
+        if ($siteId === false) {
+            $services = $this->getServiceLocator();
+            $site = $services->get('ControllerPluginManager')->get('currentSite')()
+                ?: $services->get('ViewHelperManager')->get('defaultSite')();
+            $siteId = $site ? $site->id() : null;
+        }
+
+        return $siteId;
     }
 
     /**
@@ -1073,12 +1123,9 @@ class Module extends AbstractModule
         try {
             $locale = $siteSettings->get('locale');
         } catch (\Exception $e) {
-            // Probably a background process.
-            // TODO Is the exception for current site fixed?
-            $site = $services->get('ControllerPluginManager')->get('currentSite')()
-                ?: $services->get('ViewHelperManager')->get('defaultSite')();
-            if ($site) {
-                $locale = $siteSettings->get('locale', null, $site->id());
+            $siteId = $this->getCurrentOrDefaultSiteId();
+            if ($siteId) {
+                $locale = $siteSettings->get('locale', null, $siteId);
             }
         }
 
@@ -1203,23 +1250,5 @@ class Module extends AbstractModule
         }
 
         return true;
-    }
-
-    /**
-     * @todo This list can be stored statically, since all site locales are known.
-     */
-    protected function getLangTargets(string $langTarget): array
-    {
-        static $langTargets = [];
-
-        if (!isset($langTargets[$langTarget])) {
-            $langTargetShort = strtok($langTarget, '-');
-            $langTargets[$langTarget] = array_values(array_unique(
-                [-2 => $langTarget, -1 => $langTargetShort]
-                + (self::$langsSupportedOutputShort[$langTargetShort] ?? [])
-            ));
-        }
-
-        return $langTargets[$langTarget];
     }
 }
