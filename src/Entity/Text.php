@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Entity;
+namespace Translator\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Omeka\Entity\AbstractEntity;
@@ -82,7 +82,7 @@ class Text extends AbstractEntity
      * @var \Doctrine\Common\Collections\ArrayCollection
      *
      * @OneToMany(
-     *     targetEntity="Translate\Entity\Translate",
+     *     targetEntity="Translator\Entity\Translate",
      *     mappedBy="text",
      *     orphanRemoval=true,
      *     cascade={"persist", "remove", "detach"}

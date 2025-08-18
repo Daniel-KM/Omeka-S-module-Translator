@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Controller\Admin;
+namespace Translator\Controller\Admin;
 
 use Common\Stdlib\PsrMessage;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Form\ConfirmForm;
-use Translate\Api\Representation\TranslateRepresentation;
-use Translate\Form\TranslateForm;
+use Translator\Api\Representation\TranslateRepresentation;
+use Translator\Form\TranslateForm;
 
 /**
  * Adapted from Omeka controllers.
@@ -81,7 +81,7 @@ class IndexController extends AbstractActionController
 
     public function addAction()
     {
-        /** @var \Translate\Form\TranslateForm $form */
+        /** @var \Translator\Form\TranslateForm $form */
         $form = $this->getForm(TranslateForm::class);
         $form
             ->setAttribute('action', $this->url()->fromRoute(null, [], true))
@@ -95,7 +95,7 @@ class IndexController extends AbstractActionController
                 $data = $form->getData();
                 $response = $this->api($form)->create('translates', $data);
                 if ($response) {
-                    /** @var \Translate\Api\Representation\TranslateRepresentation $translate */
+                    /** @var \Translator\Api\Representation\TranslateRepresentation $translate */
                     $translate = $response->getContent();
                     $message = new PsrMessage(
                         'Translation successfully created. {link}Add another translation?{link_end}', // @translate
@@ -123,7 +123,7 @@ class IndexController extends AbstractActionController
         $translate = $this->getTranslateFromRoute();
         $data = $translate->jsonSerialize();
 
-        /** @var \Translate\Form\TranslateForm $form */
+        /** @var \Translator\Form\TranslateForm $form */
         $form = $this->getForm(TranslateForm::class);
         $form
             ->setAttribute('action', $this->url()->fromRoute(null, [], true))

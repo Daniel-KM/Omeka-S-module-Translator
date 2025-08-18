@@ -1,7 +1,7 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Translate\Form\TranslateForm $form
+ * @var \Translator\Form\TranslateForm $form
  */
 
 $plugins = $this->getHelperPluginManager();
@@ -11,14 +11,14 @@ $translate = $plugins->get('translate');
 $this->htmlElement('body')->appendAttribute('class', 'translations add');
 
 $this->headLink()
-    ->appendStylesheet($assetUrl('css/translate-admin.css', 'Translate'));
+    ->appendStylesheet($assetUrl('css/translator-admin.css', 'Translator'));
 ?>
 
 <?= $this->pageTitle($translate('New translation'), 1, $translate('Translations')) ?>
 
 <?php $this->trigger('view.add.before'); ?>
 
-<?= $this->partial('translate/admin/index/form', [
+<?= $this->partial('translator/admin/index/form', [
     'form' => $form,
     'translate' => null,
     'resource' => null,

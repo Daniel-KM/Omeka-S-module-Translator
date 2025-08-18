@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate;
+namespace Translator;
 
 if (!class_exists('Common\TraitModule', false)) {
     require_once dirname(__DIR__) . '/Common/TraitModule.php';
@@ -161,12 +161,12 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
         $siteSettings = $services->get('Omeka\Settings\Site');
 
-        $settings->set('translate_properties_include', [
+        $settings->set('translator_properties_include', [
             'properties_max_500',
             'dcterms:title',
             'dcterms:description',
         ]);
-        $settings->set('translate_properties_exclude', [
+        $settings->set('translator_properties_exclude', [
             'properties_min_500',
             'bibo:content',
             'extracttext:extracted_text',
@@ -184,7 +184,7 @@ class Module extends AbstractModule
             : mb_strtolower($mainLocale);
         // Don't set default language by default, because the user may prefer
         // "skip" or "auto" (auto by default).
-        // $settings->set('translate_lang_source_default', $mainLocale);
+        // $settings->set('translator_lang_source_default', $mainLocale);
 
         $siteIds = $api->search('sites', [], ['returnScalar' => 'id'])->getContent();
         $pairs = [];
@@ -200,14 +200,14 @@ class Module extends AbstractModule
                 $pairs[] = "$mainLocale = $siteLocale";
             }
         }
-        $settings->set('translate_lang_pairs', $pairs);
+        $settings->set('translator_lang_pairs', $pairs);
 
         $plugins = $services->get('ControllerPluginManager');
         $url = $plugins->get('url');
         $messenger = $plugins->get('messenger');
         $messenger->addWarning((new PsrMessage(
             'Fill your DeepL api key, then set languages to translate in {link}main settings{link_end}.', // @translate
-            ['link' => sprintf('<a href="%s">', $url->fromRoute('admin/default', ['controller' => 'setting'], ['fragment' => 'translate'])), 'link_end' => '</a>']
+            ['link' => sprintf('<a href="%s">', $url->fromRoute('admin/default', ['controller' => 'setting'], ['fragment' => 'translator'])), 'link_end' => '</a>']
         ))->setEscapeHtml(false));
     }
 
@@ -249,7 +249,7 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [
-                    \Translate\Api\Adapter\TranslateAdapter::class,
+                    \Translator\Api\Adapter\TranslateAdapter::class,
                 ],
                 [
                     'read',
@@ -259,8 +259,8 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [
-                    \Translate\Entity\Text::class,
-                    \Translate\Entity\Translate::class,
+                    \Translator\Entity\Text::class,
+                    \Translator\Entity\Translate::class,
                 ],
                 [
                     'read',
@@ -271,7 +271,7 @@ class Module extends AbstractModule
             ->allow(
                 $backendRoles,
                 [
-                    \Translate\Controller\Admin\IndexController::class,
+                    \Translator\Controller\Admin\IndexController::class,
                 ],
                 [
                     'index',
@@ -287,7 +287,7 @@ class Module extends AbstractModule
             ->allow(
                 $backendRolesExceptResearcher,
                 [
-                    \Translate\Controller\Admin\IndexController::class,
+                    \Translator\Controller\Admin\IndexController::class,
                 ],
                 [
                     'add',
@@ -300,7 +300,7 @@ class Module extends AbstractModule
             ->allow(
                 $backendRolesExceptResearcher,
                 [
-                    \Translate\Api\Adapter\TranslateAdapter::class,
+                    \Translator\Api\Adapter\TranslateAdapter::class,
                 ],
                 [
                     'create',
@@ -312,14 +312,14 @@ class Module extends AbstractModule
             ->allow(
                 $backendRolesExceptResearcher,
                 [
-                    \Translate\Entity\Text::class,
-                    \Translate\Entity\Translate::class,
+                    \Translator\Entity\Text::class,
+                    \Translator\Entity\Translate::class,
                 ]
             )
             ->allow(
                 $backendRolesAdmins,
                 [
-                    \Translate\Controller\Admin\IndexController::class,
+                    \Translator\Controller\Admin\IndexController::class,
                 ],
                 [
                     'batch-delete',
@@ -328,7 +328,7 @@ class Module extends AbstractModule
             ->allow(
                 $backendRolesAdmins,
                 [
-                    \Translate\Api\Adapter\TranslateAdapter::class,
+                    \Translator\Api\Adapter\TranslateAdapter::class,
                 ],
                 [
                     'batch_delete',
@@ -651,12 +651,12 @@ class Module extends AbstractModule
 
         // Quick checks.
 
-        $deeplApiKey = $settings->get('translate_deepl_api_key');
+        $deeplApiKey = $settings->get('translator_deepl_api_key');
         if (!$deeplApiKey) {
             return;
         }
 
-        $propertiesToInclude = $settings->get('translate_properties_include', []);
+        $propertiesToInclude = $settings->get('translator_properties_include', []);
         if (!$propertiesToInclude) {
             return;
         }
@@ -720,7 +720,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $propertiesToInclude = $settings->get('translate_properties_include', []);
+        $propertiesToInclude = $settings->get('translator_properties_include', []);
         if (!$propertiesToInclude) {
             return [];
         }
@@ -732,7 +732,7 @@ class Module extends AbstractModule
 
         $easyMeta = $services->get('Common\EasyMeta');
 
-        $defaultLangSource = $settings->get('translate_lang_source_default');
+        $defaultLangSource = $settings->get('translator_lang_source_default');
 
         $isSkipEmptyLang = $defaultLangSource === 'skip'
             || ($defaultLangSource && !isset(self::$langsSupportedInput[$defaultLangSource]));
@@ -740,7 +740,7 @@ class Module extends AbstractModule
             $defaultLangSource = null;
         }
 
-        $propertiesToExclude = $settings->get('translate_properties_exclude', []);
+        $propertiesToExclude = $settings->get('translator_properties_exclude', []);
 
         $propertySizesMax = [
             'properties_max_500' => 500,
@@ -859,7 +859,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $pairs = $settings->get('translate_lang_pairs');
+        $pairs = $settings->get('translator_lang_pairs');
         if (!$pairs) {
             return [];
         }
@@ -948,7 +948,7 @@ class Module extends AbstractModule
         // TODO Use omeka http client for DeepL.
         // $httpClient = $this->services->get('Omeka\HttpClient');
 
-        $deeplApiKey = $settings->get('translate_deepl_api_key');
+        $deeplApiKey = $settings->get('translator_deepl_api_key');
         if (!$deeplApiKey) {
             return [];
         }

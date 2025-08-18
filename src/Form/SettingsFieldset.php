@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Form;
+namespace Translator\Form;
 
 use Common\Form\Element as CommonElement;
 use Laminas\Form\Fieldset;
@@ -14,40 +14,40 @@ class SettingsFieldset extends Fieldset
     protected $label = 'Translate'; // @translate
 
     protected $elementGroups = [
-        'translate' => 'Translate', // @translate
+        'translator' => 'Translate', // @translate
     ];
 
     public function init(): void
     {
         $this
-            ->setAttribute('id', 'translate')
+            ->setAttribute('id', 'translator')
             ->setOption('element_groups', $this->elementGroups)
 
             ->add([
-                'name' => 'translate_lang_source_default',
-                'type' => Element\Select::class,
+                'name' => 'translator_lang_source_default',
+                'type' => CommonElement\OptionalSelect::class,
                 'options' => [
-                    'element_group' => 'translate',
+                    'element_group' => 'translator',
                     'label' => 'Default language for values without any one', // @translate
                     'info' => 'The language should be a 2-letter iso code (ISO 3166-1) supported by the translation service.', // @translate
                     'documentation' => 'https://developers.deepl.com/docs/getting-started/supported-languages',
                     'value_options' => [
                         '' => 'Automatic', // @translate
                         'skip' => 'Skip', // @translate
-                    ] + \Translate\Module::$langsSupportedInput,
+                    ] + \Translator\Module::$langsSupportedInput,
                 ],
                 'attributes' => [
-                    'id' => 'translate_lang_source_default',
+                    'id' => 'translator_lang_source_default',
                     'required' => false,
                     'class' => 'chosen-select',
                     'data-placeholder' => 'Select language…', // @translate
                 ],
             ])
             ->add([
-                'name' => 'translate_lang_pairs',
+                'name' => 'translator_lang_pairs',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
-                    'element_group' => 'translate',
+                    'element_group' => 'translator',
                     'label' => 'Target languages or pairs of languages to translate', // @translate
                     'info' => 'The source language will be automatically defined when not set. For pairs, separate source and target with a "=", one by line. The source language should be a 2-letter iso code (ISO 3166-1) supported by the translation service. The target language may have the localization code if supported.', // @translate
                     'documentation' => 'https://developers.deepl.com/docs/getting-started/supported-languages',
@@ -56,7 +56,7 @@ class SettingsFieldset extends Fieldset
                     'as_key_value' => false,
                 ],
                 'attributes' => [
-                    'id' => 'translate_lang_pairs',
+                    'id' => 'translator_lang_pairs',
                     'required' => false,
                     'placeholder' => <<<'TXT'
                         de
@@ -67,10 +67,10 @@ class SettingsFieldset extends Fieldset
             ])
 
             ->add([
-                'name' => 'translate_properties_include',
+                'name' => 'translator_properties_include',
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
-                    'element_group' => 'translate',
+                    'element_group' => 'translator',
                     'label' => 'Properties to translate', // @translate
                     'info' => 'Only literal data are translated, not numeric values, resources, uri, or other data. It is recommended to remove big fields from the list of properties, in particular extracted text.', // @translate
                     'empty_option' => 'All', // @translate
@@ -91,17 +91,17 @@ class SettingsFieldset extends Fieldset
                     'term_as_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'translate_properties_include',
+                    'id' => 'translator_properties_include',
                     'class' => 'chosen-select',
                     'multiple' => true,
                     'data-placeholder' => 'Select properties…', // @translate
                 ],
             ])
             ->add([
-                'name' => 'translate_properties_exclude',
+                'name' => 'translator_properties_exclude',
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
-                    'element_group' => 'translate',
+                    'element_group' => 'translator',
                     'label' => 'Properties not to translate', // @translate
                     'empty_option' => '',
                     'prepend_value_options' => [
@@ -120,7 +120,7 @@ class SettingsFieldset extends Fieldset
                     'term_as_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'translate_properties_exclude',
+                    'id' => 'translator_properties_exclude',
                     'class' => 'chosen-select',
                     'multiple' => true,
                     'data-placeholder' => 'Select properties…', // @translate

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Entity;
+namespace Translator\Entity;
 
 use DateTime;
 use Omeka\Entity\AbstractEntity;
@@ -56,7 +56,7 @@ class Translate extends AbstractEntity
 
     /**
      * @ManyToOne(
-     *     targetEntity="Translate\Entity\Text",
+     *     targetEntity="Translator\Entity\Text",
      *     inversedBy="translates",
      *     cascade={"persist"}
      * )

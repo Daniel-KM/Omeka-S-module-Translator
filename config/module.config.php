@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate;
+namespace Translator;
 
 return [
     'api_adapters' => [
@@ -42,12 +42,12 @@ return [
         'routes' => [
             'admin' => [
                 'child_routes' => [
-                    'translate' => [
+                    'translator' => [
                         'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
-                            'route' => '/translate',
+                            'route' => '/translator',
                             'defaults' => [
-                                '__NAMESPACE__' => 'Translate\Controller\Admin',
+                                '__NAMESPACE__' => 'Translator\Controller\Admin',
                                 'controller' => Controller\Admin\IndexController::class,
                                 'action' => 'browse',
                             ],
@@ -142,6 +142,8 @@ return [
             ],
         ],
     ],
+    // Because translator is used by module Laminas, Internationalisation,
+    // merge them below.
     'translator' => [
         'translation_file_patterns' => [
             [
@@ -154,24 +156,34 @@ return [
     ],
     'navigation' => [
         'AdminModule' => [
-            'translate' => [
-                'label' => 'Translate', // @translate
-                'route' => 'admin/translate',
+            'translator' => [
+                'label' => 'Translator', // @translate
+                'route' => 'admin/translator',
                 'resource' => Controller\Admin\IndexController::class,
                 'privilege' => 'browse',
                 'class' => 'o-icon- fa-language',
             ],
         ],
     ],
-    'translate' => [
+    'translator' => [
+        // Library Laminas I18n.
+        'translation_file_patterns' => [
+            [
+                'type' => \Laminas\I18n\Translator\Loader\Gettext::class,
+                'base_dir' => dirname(__DIR__) . '/language',
+                'pattern' => '%s.mo',
+                'text_domain' => null,
+            ],
+        ],
+        // Module Translator.
         'config' => [
-            'translate_deepl_api_key' => '',
+            'translator_deepl_api_key' => '',
         ],
         'settings' => [
-            'translate_lang_pairs' => [],
-            'translate_lang_source_default' => '',
-            'translate_properties_include' => [],
-            'translate_properties_exclude' => [],
+            'translator_lang_pairs' => [],
+            'translator_lang_source_default' => '',
+            'translator_properties_include' => [],
+            'translator_properties_exclude' => [],
         ],
         'site_settings' => [
             // Hidden site settings, adapted to site locale.

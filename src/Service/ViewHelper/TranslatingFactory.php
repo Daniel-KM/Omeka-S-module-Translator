@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Service\ViewHelper;
+namespace Translator\Service\ViewHelper;
 
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
-use Translate\View\Helper\Translating;
+use Translator\View\Helper\Translating;
 
 /**
  * Service factory for the Translating view helper.

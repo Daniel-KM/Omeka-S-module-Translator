@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Form;
+namespace Translator\Form;
 
 use Laminas\Form\Element;
 use Laminas\Form\Form;
@@ -11,7 +11,7 @@ class ConfigForm extends Form
     {
         $this
             ->add([
-                'name' => 'translate_deepl_api_key',
+                'name' => 'translator_deepl_api_key',
                 'type' => Element\Text::class,
                 'options' => [
                     'label' => 'DeepL api key for automatic translation', // @translate

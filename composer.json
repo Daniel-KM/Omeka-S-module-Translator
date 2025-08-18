@@ -1,5 +1,5 @@
 {
-    "name": "daniel-km/omeka-s-module-translate",
+    "name": "daniel-km/omeka-s-module-translator",
     "description": "Module for Omeka S that allows to translate resources and pages manually or automatically.",
     "type": "library",
     "license": "CECILL-2.1",
@@ -9,9 +9,9 @@
             "email": "Daniel.packagist@Berthereau.net"
         }
     ],
-    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Translate",
+    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Translator",
     "support": {
-        "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-Translate/-/issues",
+        "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-Translator/-/issues",
         "forum": "https://forum.omeka.org/"
     },
     "keywords": [
@@ -33,7 +33,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Translate\\": "src/"
+            "Translator\\": "src/"
         }
     },
     "config": {

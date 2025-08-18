@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Api\Adapter;
+namespace Translator\Api\Adapter;
 
 use Common\Api\Adapter\CommonAdapterTrait;
 use Common\Stdlib\PsrMessage;
@@ -66,12 +66,12 @@ class TranslateAdapter extends AbstractEntityAdapter
 
     public function getRepresentationClass()
     {
-        return \Translate\Api\Representation\TranslateRepresentation::class;
+        return \Translator\Api\Representation\TranslateRepresentation::class;
     }
 
     public function getEntityClass()
     {
-        return \Translate\Entity\Translate::class;
+        return \Translator\Entity\Translate::class;
     }
 
     public function buildQuery(QueryBuilder $qb, array $query): void
@@ -114,7 +114,7 @@ class TranslateAdapter extends AbstractEntityAdapter
         EntityInterface $entity,
         ErrorStore $errorStore
     ): void {
-        /** @var \Translate\Entity\Translate $entity */
+        /** @var \Translator\Entity\Translate $entity */
 
         // The data are checked in validateRequest().
 
@@ -175,7 +175,7 @@ class TranslateAdapter extends AbstractEntityAdapter
 
     public function validateEntity(EntityInterface $entity, ErrorStore $errorStore)
     {
-        /** @var \Translate\Entity\Translate $entity */
+        /** @var \Translator\Entity\Translate $entity */
 
         $text = $entity->getText();
         $langTarget = $entity->getLang();
@@ -189,7 +189,7 @@ class TranslateAdapter extends AbstractEntityAdapter
 
     protected function getText(string $string, ?string $lang): ?Text
     {
-        return $this->getEntityManager()->getRepository(\Translate\Entity\Text::class)->findOneBy([
+        return $this->getEntityManager()->getRepository(\Translator\Entity\Text::class)->findOneBy([
             'lang' => $lang,
             'string' => $string,
         ]);

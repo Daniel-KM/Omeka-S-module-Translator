@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Translate\View\Helper;
+namespace Translator\View\Helper;
 
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Manager as ApiManager;
-// use Translate\Api\Representation\TranslateRepresentation;
+// use Translator\Api\Representation\TranslateRepresentation;
 
 class Translating extends AbstractHelper
 {
@@ -24,7 +24,7 @@ class Translating extends AbstractHelper
      * @param array $options
      * - as_representation (bool): false (default)
      *
-     * @return \Translate\Api\Representation\TranslateRepresentation|string|null
+     * @return \Translator\Api\Representation\TranslateRepresentation|string|null
      */
     public function __invoke(
         $idOrString,
@@ -51,7 +51,7 @@ class Translating extends AbstractHelper
         }
 
         if (!$langSource) {
-            $langSource = $view->setting('translate_lang_source_default');
+            $langSource = $view->setting('translator_lang_source_default');
             if (!$langSource) {
                 return null;
             }

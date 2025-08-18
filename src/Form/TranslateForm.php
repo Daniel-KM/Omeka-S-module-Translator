@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Form;
+namespace Translator\Form;
 
 use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
@@ -9,7 +9,7 @@ use Laminas\Form\Form;
 class TranslateForm extends Form
 {
     /**
-     * @var \Translate\Api\Adapter\TranslateAdapter
+     * @var \Translator\Api\Adapter\TranslateAdapter
      */
     protected $apiAdapterTranslate;
 

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Translate\Api\Representation;
+namespace Translator\Api\Representation;
 
 use DateTime;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
@@ -8,7 +8,7 @@ use Omeka\Api\Representation\AbstractEntityRepresentation;
 class TranslateRepresentation extends AbstractEntityRepresentation
 {
     /**
-     * @var \Translate\Entity\Translate
+     * @var \Translator\Entity\Translate
      */
     protected $resource;
 
