@@ -2,6 +2,7 @@
 
 namespace Translate\Api\Representation;
 
+use DateTime;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
 
 class TranslateRepresentation extends AbstractEntityRepresentation
@@ -27,6 +28,11 @@ class TranslateRepresentation extends AbstractEntityRepresentation
      * But in resource representation, they can be included as indicated, by language.
      * @see https://www.w3.org/TR/json-ld/#language-indexing
      *
+     * @todo Another way to represent the value (check if flatifly is allowed in such a case in json-ld).
+     * But in that case, it will be a TextRepresentation, but the aim is only to
+     * get translation for now. The separation in two tables is more internal
+     * and technical and is not useful in userland for now.
+     *
      * {@inheritDoc}
      * @see \Omeka\Api\Representation\AbstractResourceRepresentation::getJsonLd()
      */
@@ -35,7 +41,7 @@ class TranslateRepresentation extends AbstractEntityRepresentation
         $modified = $this->modified();
         return [
             'o:id' => $this->id(),
-            // TODO Set an array with the standard as key? Probably not.
+            // TODO Set an array with the iso standard as key? Probably not.
             'o:lang_source' => $this->langSource(),
             'o:lang_target' => $this->langTarget(),
             'o:automatic' => $this->automatic(),
@@ -52,7 +58,6 @@ class TranslateRepresentation extends AbstractEntityRepresentation
                     '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
                 ] : null,
             /*
-            // TODO Another way to represent the value (check if flatifly is allowed in such a case in json-ld).
             'o:string' => [
                 '@value' => $this->string(),
                 'o:lang' => $this->langSource(),
@@ -65,7 +70,7 @@ class TranslateRepresentation extends AbstractEntityRepresentation
             ],
             */
             /*
-            // TODO Another way to represent (and in case of multiple level of language, add it in key).
+            // TODO Another way to represent (and in case of multiple modes of language, add it in key). See above: TextRepresentation.
             'label' => [
                 'en' => $this->string()
                 'de' => $this->translation(),
@@ -76,14 +81,18 @@ class TranslateRepresentation extends AbstractEntityRepresentation
         ];
     }
 
-    public function langSource(): string
+    /**
+     * The lang source may be null when there is no default language.
+     * It is stored as an empty string, but the representation uses null.
+     */
+    public function langSource(): ?string
     {
-        return $this->resource->getLangSource();
+        return $this->resource->getText()->getLang() ?: null;
     }
 
     public function langTarget(): string
     {
-        return $this->resource->getLangTarget();
+        return $this->resource->getLang();
     }
 
     public function automatic(): bool
@@ -98,12 +107,22 @@ class TranslateRepresentation extends AbstractEntityRepresentation
 
     public function string(): string
     {
-        return $this->resource->getString();
+        return $this->resource->getText()->getString();
     }
 
     public function translation(): string
     {
         return $this->resource->getTranslation();
+    }
+
+    public function created(): DateTime
+    {
+        return $this->resource->getCreated();
+    }
+
+    public function modified(): ?DateTime
+    {
+        return $this->resource->getModified();
     }
 
     /**

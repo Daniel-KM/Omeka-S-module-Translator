@@ -9,15 +9,16 @@ use Omeka\Entity\AbstractEntity;
  * For index:
  * Most of the times, the process reads a string in a specific language to
  * translate it in another language, so a main index is used for that.
- * The index "string/lang_source/lang_target" is unique, but there may be a
- * duplicate issue on update (mysql is not sql), so a simple index is created
- * for now.
+ * The index "text/lang source/lang target" is generally unique, but there may
+ * be a duplicate issue on update (mysql is not sql), so a simple index is
+ * created.
+ * Furthermore, it allows to manage the case where there are multiple
+ * translations for one string (The Queen => Die Königin, Ihre Majestät).
  *
- * Translates have no owner or linked data, like resource values. They should be simple and fast.
+ * Translates have no owner or linked data, like resource values. They should be
+ * simple and fast, but not repetitive.
  *
- * For next version:
- * @todo Create two tables and a view to avoid to duplicate source string? Check size first then speed and simplicity. Will be required for big bases with multiple langs. Or a simple view to value id or site page block id ? or two views? Or limit to resources? And it is not recommended to translate long fields (ocr).
- * @todo Replace string by value id? The value id are not stable in omeka. The storage of the string avoids some duplication too (but some main fields like title and description are always unique).
+ * @todo Replace string by value id? The value id are not stable in omeka. The storage of the string avoids some duplication too (but some main fields like title and description are generally unique).
  *
  * @todo Add a context (laminas text domain)?
  *
@@ -26,35 +27,17 @@ use Omeka\Entity\AbstractEntity;
  * @todo Replace "automatic" or add a type or a name? (owner id, visitor id, "manual", "deepl", etc.)?
  * @todo Store a job id? No.
  *
- * @todo Manage the case where there are multiple translation for one string (The Queen => Die Königin, Ihre Majestät).
- * @todo The json-ld allows to store a canonical name with lang "@none", that may be stored as it or as null? Probably none.
- * @see https://www.w3.org/TR/json-ld/#language-indexing
- *
- * @todo Check if the indices and the aggregate index are the best ones.
- * The value of lang_source is almost always the same for common databases
- * and is already indexed in field lang of value.
+ * @todo Check if the indices and the aggregate index are the best ones (see Text too).
  *
  * @Entity
  * @Table(
  *     indexes={
  *         @Index(
- *             name="idx_translate_langtarget_langsource",
+ *             name="idx_translate_lang",
  *             columns={
- *                 "lang_target",
- *                 "lang_source"
+ *                 "lang"
  *             }
- *         ),
- *         @Index(
- *             name="idx_translate_string_langtarget_langsource",
- *             columns={
- *                 "string",
- *                 "lang_target",
- *                 "lang_source"
- *             },
- *             options={
- *                 "lengths": {190}
- *             }
- *          )
+ *         )
  *     }
  * )
  */
@@ -72,22 +55,20 @@ class Translate extends AbstractEntity
     protected $id;
 
     /**
-     * While omeka value support 190 characters, only 8 is needed here, because
-     * DeepL supports only very common languages for now. Localized code are not
-     * supported too for now.
-     * @see https://developers.deepl.com/docs/getting-started/supported-languages
-     *
-     * @var string
-     *
-     * @Column(
-     *     length=8,
-     *     nullable=false
+     * @ManyToOne(
+     *     targetEntity="Translate\Entity\Text",
+     *     inversedBy="translates",
+     *     cascade={"persist"}
+     * )
+     * @JoinColumn(
+     *     nullable=false,
+     *     onDelete="CASCADE"
      * )
      */
-    protected $langSource;
+    protected $text;
 
     /**
-     * Unlike source, DeepL already supports some localization codes.
+     * Unlike source, DeepL already supports some localization codes for target.
      *
      * @var string
      *
@@ -96,7 +77,7 @@ class Translate extends AbstractEntity
      *     nullable=false
      * )
      */
-    protected $langTarget;
+    protected $lang;
 
     /**
      * @Column(
@@ -145,17 +126,6 @@ class Translate extends AbstractEntity
      * @var string
      *
      * @Column(
-     *     name="`string`",
-     *     type="text",
-     *     nullable=false
-     * )
-     */
-    protected $string;
-
-    /**
-     * @var string
-     *
-     * @Column(
      *     type="text",
      *     nullable=false
      * )
@@ -167,26 +137,26 @@ class Translate extends AbstractEntity
         return $this->id;
     }
 
-    public function setLangSource(string $langSource): self
+    public function setText(Text $text): self
     {
-        $this->langSource = $langSource;
+        $this->text = $text;
         return $this;
     }
 
-    public function getLangSource(): ?string
+    public function getText(): Text
     {
-        return $this->langSource;
+        return $this->text;
     }
 
-    public function setLangTarget(string $langTarget): self
+    public function setLang(string $lang): self
     {
-        $this->langTarget = $langTarget;
+        $this->lang = $lang;
         return $this;
     }
 
-    public function getLangTarget(): string
+    public function getLang(): string
     {
-        return $this->langTarget;
+        return $this->lang;
     }
 
     public function setAutomatic(bool $automatic): self
@@ -209,17 +179,6 @@ class Translate extends AbstractEntity
     public function getReviewed(): bool
     {
         return $this->reviewed;
-    }
-
-    public function setString(string $string): self
-    {
-        $this->string = $string;
-        return $this;
-    }
-
-    public function getString(): string
-    {
-        return $this->string;
     }
 
     public function setTranslation(string $translation): self

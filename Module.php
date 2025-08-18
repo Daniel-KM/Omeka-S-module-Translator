@@ -43,6 +43,7 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [
+                    \Translate\Entity\Text::class,
                     \Translate\Entity\Translate::class,
                 ],
                 [
@@ -106,6 +107,7 @@ class Module extends AbstractModule
                     $acl::ROLE_REVIEWER,
                 ],
                 [
+                    \Translate\Entity\Text::class,
                     \Translate\Entity\Translate::class,
                 ],
                 [
