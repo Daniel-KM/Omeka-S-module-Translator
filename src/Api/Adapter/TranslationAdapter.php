@@ -4,6 +4,9 @@ namespace Translator\Api\Adapter;
 
 use Common\Api\Adapter\CommonAdapterTrait;
 use Common\Stdlib\PsrMessage;
+use Doctrine\Common\EventSubscriber;
+use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Events;
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Request;
@@ -11,7 +14,7 @@ use Omeka\Entity\EntityInterface;
 use Omeka\Stdlib\ErrorStore;
 use Translator\Entity\Text;
 
-class TranslationAdapter extends AbstractEntityAdapter
+class TranslationAdapter extends AbstractEntityAdapter implements EventSubscriber
 {
     use CommonAdapterTrait;
 
@@ -58,6 +61,8 @@ class TranslationAdapter extends AbstractEntityAdapter
             'modified' => 'modified',
         ],
     ];
+
+    protected static $texts = [];
 
     public function getResourceName()
     {
@@ -192,21 +197,24 @@ class TranslationAdapter extends AbstractEntityAdapter
         }
     }
 
-    /**
-     * @fixme During a large import or update, the static cache of Text may grow too much.
-     */
+    public function getSubscribedEvents(): array
+    {
+        return [Events::onFlush];
+    }
+
+    public function onFlush(OnFlushEventArgs $args): void
+    {
+        self::$texts = [];
+    }
+
     protected function getOrCreateText(string $string, ?string $lang, bool $create): Text
     {
-        // A cache is needed to create/update a string with multiple languages.
-        // The Text should be persisted.
-        static $texts = [];
-
         $lang = $lang ?: '';
 
         $cacheKey = sha1('/' . $lang . '/' . $string . '/');
 
-        if (isset($texts[$cacheKey])) {
-            return $texts[$cacheKey];
+        if (isset(self::$texts[$cacheKey])) {
+            return self::$texts[$cacheKey];
         }
 
         $text = $this->getEntityManager()->getRepository(\Translator\Entity\Text::class)->findOneBy([
@@ -219,7 +227,7 @@ class TranslationAdapter extends AbstractEntityAdapter
             $this->getEntityManager()->persist($text);
         }
 
-        $texts[$cacheKey] = $text;
+        self::$texts[$cacheKey] = $text;
 
         return $text;
     }
