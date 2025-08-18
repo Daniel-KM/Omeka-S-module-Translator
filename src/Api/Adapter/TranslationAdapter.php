@@ -82,15 +82,17 @@ class TranslationAdapter extends AbstractEntityAdapter implements EventSubscribe
     public function buildQuery(QueryBuilder $qb, array $query): void
     {
         $this->buildQueryFields($qb, $query);
-        $result = $this->buildQueryFields($qb, $query, 'omeka_text', [
+        $result = $this->buildQueryFields($qb, $query, 'translate_text', [
             'string' => [
-                'lang_source' => 'lang',
                 'string' => 'string',
+            ],
+            'string_empty' => [
+                'lang_source' => 'lang',
             ],
         ]);
         if ($result) {
             $qb
-                ->innerJoin('omeka_root.text', 'omeka_text', 'WITH', $qb->expr()->eq('omeka_root.text', 'omeka_text.id'));
+                ->innerJoin('omeka_root.text', 'translate_text');
         }
     }
 

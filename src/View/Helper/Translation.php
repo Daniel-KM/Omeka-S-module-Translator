@@ -32,8 +32,6 @@ class Translation extends AbstractHelper
         ?string $langTarget = null,
         array $options = []
     ) {
-        $view = $this->getView();
-
         $asRepresentation = !empty($options['as_representation']);
 
         if (is_numeric($idOrString)) {
@@ -50,25 +48,24 @@ class Translation extends AbstractHelper
             return null;
         }
 
-        if (!$langSource) {
-            $langSource = $view->setting('translator_lang_source_default');
-            if (!$langSource) {
-                return null;
-            }
-        }
-
+        // "read" cannot be used with a sub-entity in doctrine, or get it first.
+        // For lang source, "read" uses empty string, but "search" requires it
+        // to be wrapped with single quotes.
         $data = [
-            'langSource' => $langSource,
-            'langTarget' => $langTarget,
             'string' => $idOrString,
+            'lang_source' => $langSource ?: "''",
+            'lang_target' => $langTarget,
+            'limit' => 1,
         ];
 
         try {
-            return $asRepresentation
-                ? $this->api->read('translations', $data)->getContent()
-                : $this->api->read('translations', $data, ['returnScalar' => 'translation'])->getContent();
+            $result = $asRepresentation
+                ? $this->api->search('translations', $data)->getContent()
+                : $this->api->search('translations', $data, ['returnScalar' => 'translation'])->getContent();
         } catch (\Exception $e) {
             return null;
         }
+
+        return reset($result);
     }
 }

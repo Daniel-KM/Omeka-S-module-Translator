@@ -896,12 +896,13 @@ class Module extends AbstractModule
         $api = $services->get('Omeka\ApiManager');
 
         // TODO Simplify to avoid the loop.
-        // FIXME Search empty language source.
         $filteredTexts = [];
         foreach ($texts as $text) {
             $existingTranslations = $api->search('translations', [
                 'string' => $text,
-                'lang_source' => $langSource,
+                // An empty lang source should be wrapped with single quotes to
+                // be searchable.
+                'lang_source' => $langSource ?: "''",
                 'lang_target' => $langTarget,
             ])->getContent();
             if (empty($existingTranslations)) {
