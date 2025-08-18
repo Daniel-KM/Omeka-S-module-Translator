@@ -409,11 +409,8 @@ class Module extends AbstractModule
             'api.update.post',
             [$this, 'handleSaveSitePost']
         );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\SiteAdapter::class,
-            'api.delete.post',
-            [$this, 'handleSaveSitePost']
-        );
+        // It is useless to manage on-delete, because site settings are
+        // automatically removed.
     }
 
     /**
