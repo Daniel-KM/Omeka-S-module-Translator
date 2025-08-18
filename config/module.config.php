@@ -173,5 +173,9 @@ return [
             'translate_properties_include' => [],
             'translate_properties_exclude' => [],
         ],
+        'site_settings' => [
+            // Hidden site settings, adapted to site locale.
+            'translator_lang_pairs' => [],
+        ],
     ],
 ];

@@ -8,11 +8,14 @@ if (!class_exists('Common\TraitModule', false)) {
 
 use Common\Stdlib\PsrMessage;
 use Common\TraitModule;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\ModuleManager\ModuleManager;
 use Laminas\Mvc\MvcEvent;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
+use Omeka\Api\Representation\ValueRepresentation;
 use Omeka\Module\AbstractModule;
 
 class Module extends AbstractModule
@@ -103,6 +106,28 @@ class Module extends AbstractModule
         'vi' => 'Vietnamese',
         'zh-hans' => 'Chinese (simplified)',
         'zh-hant' => 'Chinese (traditional)',
+    ];
+
+    /**
+     * Read-only (but php 7.4).
+     * When the target lang is short, try long lang code too.
+     */
+    public static $langsSupportedOutputShort = [
+        'en' => [
+            'en-gb',
+            'en-us',
+        ],
+        'es' => [
+            'es-419',
+        ],
+        'pt' => [
+            'pt-br',
+            'pt-pt',
+        ],
+        'zh' => [
+            'zh-hans',
+            'zh-hant',
+        ],
     ];
 
     public function init(ModuleManager $moduleManager): void
@@ -314,6 +339,27 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
+        // As long as there is not a main listener for resources (adapter,
+        // controller, representation…), use a loop.
+
+        $representations = [
+            // \Omeka\Api\Representation\AbstractResourceEntityRepresentation::class,
+            \Omeka\Api\Representation\ItemRepresentation::class,
+            \Omeka\Api\Representation\ItemSetRepresentation::class,
+            \Omeka\Api\Representation\MediaRepresentation::class,
+            \Omeka\Api\Representation\ValueAnnotationRepresentation::class,
+            \Annotate\Api\Representation\AnnotationRepresentation::class,
+        ];
+        foreach ($representations as $representation) {
+            // Handle translated title.
+            $sharedEventManager->attach(
+                $representation,
+                'rep.resource.title',
+                [$this, 'handleResourceTitle']
+            );
+        }
+
+        // Store translations after creation or update of resources.
         $adapters = [
             \Omeka\Api\Adapter\ItemAdapter::class,
             \Omeka\Api\Adapter\ItemSetAdapter::class,
@@ -362,6 +408,173 @@ class Module extends AbstractModule
             'api.delete.post',
             [$this, 'handleSaveSitePost']
         );
+    }
+
+    /**
+     * Manage translation of the title.
+     */
+    public function handleResourceTitle(Event $event): void
+    {
+        /**
+         * When we want a translated title, we don’t care of the existing title.
+         * Just get the title via value(), that takes care of the language.
+         * Similar logic can be found in \Omeka\Api\Representation\AbstractResourceEntityRepresentation::displayDescription()
+         *
+         * @var \Omeka\Api\Manager $api
+         * @var \Doctrine\DBAL\Connection $connection
+         * @var \Doctrine\ORM\EntityManager $entityManager
+         *
+         * @var \Omeka\Mvc\Status $status
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Settings\SiteSettings $siteSettings
+         * @var \Common\View\Helper\DefaultSite $defaultSite
+         * @var \Omeka\Mvc\Controller\Plugin\CurrentSite $currentSite
+         * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+         */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+
+        // The translation is done only for site.
+
+        if (!$status->isSiteRequest()) {
+            return;
+        }
+
+        $resource = $event->getTarget();
+        $template = $resource->resourceTemplate();
+        if ($template && $property = $template->titleProperty()) {
+            $value = $resource->value($property->term()) ?? $resource->value('dcterms:title');
+        } else {
+            $value = $resource->value('dcterms:title');
+        }
+
+        if (!$value) {
+            return;
+        }
+
+        // TODO Manage more fallbacks, not just the short/long code. See module Internationalisation.
+        // TODO Is it really useful to check pairs or just check lang source/target and do a query request if needed?
+
+        // Here, only the type of value and the languages source and targets are
+        // checked. Of course, there is no need to do more check when the value
+        // has the right language.
+
+        $localeSite = $this->getLocaleCurrentSite();
+        $isTranslatabelValue = $this->isTranslatableValue($value, $localeSite);
+        if (!$isTranslatabelValue) {
+            return;
+        }
+
+        $langSource = $value->lang();
+        if (!$langSource) {
+            $services = $this->getServiceLocator();
+            $settings = $services->get('Omeka\Settings');
+            $defaultLangSource = $settings->get('translator_lang_source_default');
+            if ($defaultLangSource === 'skip') {
+                return;
+            }
+            $langSource = $defaultLangSource;
+        }
+
+        // The external service supports only 2-letter codes on input.
+        $langSource = $langSource
+            ? mb_strtolower(strtok(strtr($langSource, '_', '-'), '-'))
+            : null;
+
+        $langTargets = $this->getLangTargets($localeSite);
+
+        // TODO Update view helper Translation.
+        // TODO Use orm or dbal to get translations? For multiple values: most of the time, there is only one record (show) or a list of titles (browse).
+        // Use a direct sql to manage target language and fallbacks, until the
+        // view helper will manage them.
+        // The external translating service is not queried in real time.
+
+        $services = $this->getServiceLocator();
+        $connection = $services->get('Omeka\Connection');
+        $qb = $connection->createQueryBuilder();
+        $expr = $qb->expr();
+        $qb
+            ->select('translation.translation')
+            ->from('translation', 'translation')
+            ->innerJoin('translation', 'translate_text', 'text', 'text.id = translation.text_id')
+            ->where($expr->eq('text.string', ':string'))
+            ->andWhere($expr->in('translation.lang', ':lang_targets'))
+            ->setMaxResults(1)
+        ;
+        $bind = ['string' => $value->value()];
+        $types = ['string' => ParameterType::STRING];
+        if ($langSource) {
+            $qb->andWhere($expr->eq('text.lang', ':lang_source'));
+            $bind['lang_source'] = $langSource;
+            $types['lang_source'] = ParameterType::STRING;
+        } else {
+            $qb->andWhere($expr->isNull('text.lang'));
+        }
+
+        if (count($langTargets) === 1) {
+            $qb->andWhere($expr->eq('translation.lang', ':lang_target'));
+            $bind['lang_target'] = reset($langTargets);
+            $types['lang_target'] = ParameterType::STRING;
+        } else {
+            $qb
+                ->andWhere($expr->in('translation.lang', ':lang_targets'))
+                ->orderBy('FIELD(translation.lang, :lang_targets)', 'ASC');
+            $bind['lang_targets'] = $langTargets;
+            $types['lang_targets'] = Connection::PARAM_STR_ARRAY;
+        }
+
+        $qb->setParameters($bind, $types);
+
+        $translation = $qb->execute()->fetchOne();
+        if ($translation) {
+            $event->setParam('title', $translation);
+        }
+    }
+
+    /**
+     * List locales according to the request for a site.
+     *
+     * @fixme Remove the exception that occurs with background job and api during update: job seems to set status as site.
+     *
+     * Adapted:
+     * @see \Internationalisation\Module::getLocales()
+     * @see \Translator\Module::getLanguagePairsOfSite()
+     */
+    protected function getLanguagePairsOfSite(): array
+    {
+        static $pairsOfCurrentSite;
+
+        if (is_array($pairsOfCurrentSite)) {
+            return $pairsOfCurrentSite;
+        }
+
+        $pairsOfCurrentSite = [];
+
+        /**
+         * @var \Omeka\Mvc\Status $status
+         * @var \Omeka\Settings\SiteSettings $siteSettings
+         * @var \Common\View\Helper\DefaultSite $defaultSite
+         * @var \Omeka\Mvc\Controller\Plugin\CurrentSite $currentSite
+         */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+
+        if ($status->isSiteRequest()) {
+            $siteSettings = $services->get('Omeka\Settings\Site');
+            try {
+                $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', []);
+            } catch (\Exception $e) {
+                // Probably a background process.
+                // TODO Is the exception for current site fixed?
+                $site = $services->get('ControllerPluginManager')->get('currentSite')()
+                    ?: $services->get('ViewHelperManager')->get('defaultSite')();
+                if ($site) {
+                    $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', [], $site->id());
+                }
+            }
+        }
+
+        return $pairsOfCurrentSite;
     }
 
     public function handleSavePost(Event $event): void
@@ -460,13 +673,12 @@ class Module extends AbstractModule
 
         $easyMeta = $services->get('Common\EasyMeta');
 
-        $defaultLang = $settings->get('translate_lang_source_default');
-        $pairsLangsSource = array_column($pairs, 'source', 'source');
+        $defaultLangSource = $settings->get('translate_lang_source_default');
 
-        $isSkipEmptyLang = $defaultLang === 'skip'
-            || ($defaultLang && !isset(self::$langsSupportedInput[$defaultLang]));
-        if (!$defaultLang || $defaultLang === 'auto' || $defaultLang === 'skip') {
-            $defaultLang = null;
+        $isSkipEmptyLang = $defaultLangSource === 'skip'
+            || ($defaultLangSource && !isset(self::$langsSupportedInput[$defaultLangSource]));
+        if (!$defaultLangSource || $defaultLangSource === 'auto' || $defaultLangSource === 'skip') {
+            $defaultLangSource = null;
         }
 
         $propertiesToExclude = $settings->get('translate_properties_exclude', []);
@@ -519,16 +731,19 @@ class Module extends AbstractModule
             }
         }
 
+        $pairsLangsSource = array_column($pairs, 'source', 'source');
+
         /** @var \Omeka\Api\Representation\ValueRepresentation $value */
         foreach ($allValues as $term => $values) foreach ($values['values'] as $value) {
             // Don't translate linked resource, uri without label, numeric data,
             // or invalid lang.
-            // Lang codes for values use "-", not "_".
             $val = (string) $value->value();
             $type = (string) $value->type();
             $length = mb_strlen($val);
             $lang = (string) $value->lang();
-            $langCode = strtok($lang, '-');
+            // Lang codes for values use "-", not "_".
+            // For deepl, the input is always without regionalization.
+            $langCode = mb_strtolower(strtok($lang, '-'));
             // Check exclusion first.
             if (!$val
                 || is_numeric($val)
@@ -556,7 +771,7 @@ class Module extends AbstractModule
                 // default lang.
                 // The target languages are already filtered.
                 foreach ($pairs as $pair) {
-                    $langSource = $pair['source'] ?: $defaultLang;
+                    $langSource = $pair['source'] ?: $defaultLangSource;
                     if (isset($pairsLangsSource[$langSource])) {
                         $langTarget = $pair['target'];
                         $key = $langSource . '=' . $langTarget;
@@ -734,6 +949,9 @@ class Module extends AbstractModule
 
     /**
      * Store full pairs by site for quick process and to manage fallbacks.
+     *
+     * The pairs are stored by site, then, as a list, a list by source and a
+     * list by target in order to manage different use cases quickly.
      */
     protected function prepareLangPairsBySite(): void
     {
@@ -743,16 +961,11 @@ class Module extends AbstractModule
          * @var \Omeka\Settings\SiteSettings $siteSettings
          */
         $services = $this->getServiceLocator();
+        $api = $services->get('Omeka\ApiManager');
         $settings = $services->get('Omeka\Settings');
+        $siteSettings = $services->get('Omeka\Settings\Site');
 
         $pairs = $this->normalizeLanguagePairs();
-        if (!count($pairs)) {
-            $settings->set('translator_lang_pairs_by_site', []);
-            return;
-        }
-
-        $api = $services->get('Omeka\ApiManager');
-        $siteSettings = $services->get('Omeka\Settings\Site');
 
         $mainLocale = mb_strtolower(strtr(
             $settings->get('locale')
@@ -761,20 +974,193 @@ class Module extends AbstractModule
             ['_' => '-']
         ));
 
-        $siteIds = $api->search('sites', [], ['returnScalar' => 'slug'])->getContent();
-        foreach ($siteIds as $siteId => $siteSlug) {
+        $siteIds = $api->search('sites', [], ['returnScalar' => 'id'])->getContent();
+        foreach ($siteIds as $siteId) {
             $siteLocale = mb_strtolower(strtr((string) $siteSettings->get('locale', null, $siteId))) ?: $mainLocale;
             $siteLocaleShort = strtok($siteLocale, '-');
             $sitePairs = [];
             foreach ($pairs as $pair) {
                 if ($pair['target'] === $siteLocale || strtok($pair['target'], '-') === $siteLocaleShort) {
-                    $sitePairs[] = $pair;
+                    $sitePairs['pairs'][] = $pair;
+                    $sitePairs['source'][$pair['target']] = $pair['target'];
+                    $sitePairs['target'][$pair['source']] = $pair['source'];
                 }
             }
-            $pairsBySite[$siteId] = $sitePairs;
-            $pairsBySite[$siteSlug] = $sitePairs;
+            $siteSettings->set('translator_lang_pairs', array_map('array_values', $sitePairs));
+        }
+    }
+
+    /**
+     * Get the locale of the site.
+     *
+     * @fixme Remove the exception that occurs with background job and api during update: job seems to set status as site.
+     *
+     * Adapted:
+     * @see \Internationalisation\Module::getLocales()
+     * @see \Translator\Module::getLocaleCurrentSite()
+     * @see \Translator\Module::getLanguagePairsOfSite()
+     */
+     protected function getLocaleCurrentSite(): string
+    {
+        static $locale;
+
+        if (is_string($locale)) {
+            return $locale;
         }
 
-        $settings->set('translator_lang_pairs_by_site', $pairsBySite);
+        $services = $this->getServiceLocator();
+        $siteSettings = $services->get('Omeka\Settings\Site');
+
+        try {
+            $locale = $siteSettings->get('locale');
+        } catch (\Exception $e) {
+            // Probably a background process.
+            // TODO Is the exception for current site fixed?
+            $site = $services->get('ControllerPluginManager')->get('currentSite')()
+                ?: $services->get('ViewHelperManager')->get('defaultSite')();
+            if ($site) {
+                $locale = $siteSettings->get('locale', null, $site->id());
+            }
+        }
+
+        if (!$locale) {
+            $locale = $settings->get('locale')
+                ?: $services->get('Config')['translator']['locale']
+                ?: 'en_US';
+        }
+
+        $locale = mb_strtolower(strtr($locale, '_', '-'));
+
+        return $locale;
+    }
+
+    /**
+     * Check if value is translatable according to config, except size.
+     *
+     * Size is not checked, because it may have been changed between creation
+     * of translations. The same for target language, checked against possible
+     * targets, not currently used languages.
+     *
+     * A value that is translatable does not mean that the value was translated.
+     *
+     * @return bool
+     *
+     * @todo Return list of languages that may have been used for translation?
+     */
+    protected function isTranslatableValue(ValueRepresentation $value, string $langTarget): bool
+    {
+        static $defaultLangSource;
+        static $isSkipEmptyLang;
+        static $propertiesToExclude;
+        static $propertiesToInclude;
+
+        if ($isSkipEmptyLang === null) {
+            /**
+             * @var \Omeka\Settings\Settings $settings
+             * @var \Common\Stdlib\EasyMeta $easyMeta
+             */
+            $services = $this->getServiceLocator();
+            $settings = $services->get('Omeka\Settings');
+            $easyMeta = $services->get('Common\EasyMeta');
+
+            $defaultLangSource = $settings->get('translator_lang_source_default');
+
+            $isSkipEmptyLang = $defaultLangSource === 'skip'
+                || ($defaultLangSource && ! isset(self::$langsSupportedInput[$defaultLangSource]));
+            if (!$defaultLangSource || $defaultLangSource === 'auto' || $defaultLangSource === 'skip') {
+                $defaultLangSource = null;
+            }
+
+            $propertiesToExclude = $settings->get('translator_properties_exclude', []);
+            $propertiesToInclude = $settings->get('translator_properties_include', []);
+
+            // Here, the list of specific keys are just used to be removed.
+            $propertySizesMax = [
+                'properties_max_500' => 500,
+                'properties_max_1000' => 1000,
+                'properties_max_5000' => 5000,
+            ];
+            $propertySizesMin = [
+                'properties_min_500' => 500,
+                'properties_min_1000' => 1000,
+                'properties_min_5000' => 5000,
+            ];
+            $propertySizes = $propertySizesMax + $propertySizesMin;
+
+            // Here, the size is not managed, unlike during save.
+            // In particular, the size may have been changed.
+            $propertiesToInclude = array_combine($propertiesToInclude, $propertiesToInclude);
+            if (array_intersect_key($propertySizes, $propertiesToInclude)) {
+                $propertiesToInclude = $easyMeta->propertyTerms();
+            }
+
+            $propertiesToExclude = array_combine($propertiesToExclude, $propertiesToExclude);
+            $propertiesToExclude = array_diff_key($propertiesToExclude, $propertySizes);
+            $propertiesToInclude = array_combine($propertiesToInclude, $propertiesToInclude);
+            $propertiesToInclude = array_diff_key($propertiesToInclude, $propertySizes);
+            $propertiesToInclude = array_diff_key($propertiesToInclude, $propertiesToExclude);
+        }
+
+        // Here, there is always a list of properties to include.
+        if (!$propertiesToInclude) {
+            return false;
+        }
+
+        $term = $value->property()->term();
+        // Check for explicit inclusion of the property early.
+        // The list of inclusion is filtered of excluded terms above.
+        if (!isset($propertiesToInclude[$term])) {
+            return false;
+        }
+
+        // Check if lang target is a translatable one, included short lang code.
+        $langTargetShort = strtok($langTarget, '-');
+
+        // Don't translate linked resource, uri without label, numeric data, or
+        // invalid lang.
+        // Lang codes for values use "-", not "_".
+        $val = (string) $value->value();
+        $type = (string) $value->type();
+        $lang = (string) $value->lang();
+        // For deepl, the input is always without regionalization.
+        $langCode = mb_strtolower(strtok($lang, '-'));
+        if (!$val
+            || is_numeric($val)
+            || $value->valueResource()
+            // TODO Manage html and xml via option tag_handling and other options, so process them separately.
+            || in_array($type, ['boolean', 'json', 'html', 'xml', 'place'])
+            || strpos($type, 'geographic:') === 0
+            || strpos($type, 'geometry:') === 0
+            || strpos($type, 'numeric:') === 0
+            || $langCode === $langTarget
+            || (!$langCode && $isSkipEmptyLang)
+            || ($langCode && !isset(self::$langsSupportedInput[$langCode]))
+            || !(isset(self::$langsSupportedOutput[$langTarget])
+                || isset(self::$langsSupportedOutput[$langTargetShort])
+                || isset(self::$langsSupportedOutputShort[$langTargetShort])
+            )
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @todo This list can be stored statically, since all site locales are known.
+     */
+    protected function getLangTargets(string $langTarget): array
+    {
+        static $langTargets = [];
+
+        if (!isset($langTargets[$langTarget])) {
+            $langTargetShort = strtok($langTarget, '-');
+            $langTargets[$langTarget] = array_values(array_unique(
+                [-2 => $langTarget, -1 => $langTargetShort]
+                + (self::$langsSupportedOutputShort[$langTargetShort] ?? [])
+            ));
+        }
+
+        return $langTargets[$langTarget];
     }
 }
