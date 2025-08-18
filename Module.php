@@ -357,6 +357,12 @@ class Module extends AbstractModule
                 'rep.resource.title',
                 [$this, 'handleResourceTitle']
             );
+            // Handle filter of values according to settings.
+            $sharedEventManager->attach(
+                $representation,
+                'rep.resource.display_values',
+                [$this, 'handleResourceDisplayValues']
+            );
         }
 
         // Store translations after creation or update of resources.
@@ -420,15 +426,7 @@ class Module extends AbstractModule
          * Just get the title via value(), that takes care of the language.
          * Similar logic can be found in \Omeka\Api\Representation\AbstractResourceEntityRepresentation::displayDescription()
          *
-         * @var \Omeka\Api\Manager $api
-         * @var \Doctrine\DBAL\Connection $connection
-         * @var \Doctrine\ORM\EntityManager $entityManager
-         *
          * @var \Omeka\Mvc\Status $status
-         * @var \Omeka\Settings\Settings $settings
-         * @var \Omeka\Settings\SiteSettings $siteSettings
-         * @var \Common\View\Helper\DefaultSite $defaultSite
-         * @var \Omeka\Mvc\Controller\Plugin\CurrentSite $currentSite
          * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
          */
         $services = $this->getServiceLocator();
@@ -452,6 +450,70 @@ class Module extends AbstractModule
             return;
         }
 
+        $translation = $this->translateValue($value);
+
+        if ($translation) {
+            $event->setParam('title', $translation);
+        }
+    }
+
+    /**
+     * Manage translation of the resource values without change in views.
+     *
+     * A fake entity with the translation is used internally for each ValueRepresentation,
+     * so it will return the right translated value.
+     */
+    public function handleResourceDisplayValues(Event $event): void
+    {
+        /**
+         * @var \Omeka\Mvc\Status $status
+         * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+         */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+
+        // The translation is done only for site.
+
+        if (!$status->isSiteRequest()) {
+            return;
+        }
+
+        $values = $event->getParam('values');
+
+        // TODO Check term early, even if there is an early check inside isTranslatableValue().
+
+        /** @var \Omeka\Api\Representation\ValueRepresentation $value */
+        foreach ($values as /* $term => */ &$valueData) foreach ($valueData['values'] as $value) {
+            $translation = $this->translateValue($value);
+            if ($translation) {
+                $reflection = new \ReflectionClass($value);
+                $reflectionProperty = $reflection->getProperty('value');
+                $reflectionProperty->setAccessible(true);
+                $valueEntity = $reflectionProperty->getValue($value);
+                $valueEntity->setValue($translation);
+                // No need to update the reflection property.
+            }
+        }
+        unset($valueData);
+
+        $event->setParam('values', $values);
+    }
+
+    public function translateValue(ValueRepresentation $value): ?string
+    {
+        /**
+         * @var \Omeka\Api\Manager $api
+         * @var \Doctrine\DBAL\Connection $connection
+         * @var \Doctrine\ORM\EntityManager $entityManager
+         *
+         * @var \Omeka\Mvc\Status $status
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Settings\SiteSettings $siteSettings
+         * @var \Common\View\Helper\DefaultSite $defaultSite
+         * @var \Omeka\Mvc\Controller\Plugin\CurrentSite $currentSite
+         * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+         */
+
         // TODO Manage more fallbacks, not just the short/long code. See module Internationalisation.
         // TODO Is it really useful to check pairs or just check lang source/target and do a query request if needed?
 
@@ -462,7 +524,7 @@ class Module extends AbstractModule
         $localeSite = $this->getLocaleCurrentSite();
         $isTranslatabelValue = $this->isTranslatableValue($value, $localeSite);
         if (!$isTranslatabelValue) {
-            return;
+            return null;
         }
 
         $langSource = $value->lang();
@@ -498,7 +560,6 @@ class Module extends AbstractModule
             ->from('translation', 'translation')
             ->innerJoin('translation', 'translate_text', 'text', 'text.id = translation.text_id')
             ->where($expr->eq('text.string', ':string'))
-            ->andWhere($expr->in('translation.lang', ':lang_targets'))
             ->setMaxResults(1)
         ;
         $bind = ['string' => $value->value()];
@@ -523,12 +584,10 @@ class Module extends AbstractModule
             $types['lang_targets'] = Connection::PARAM_STR_ARRAY;
         }
 
-        $qb->setParameters($bind, $types);
+        // Warning: the result may be false.
+        $result = $qb->setParameters($bind, $types)->execute()->fetchOne();
 
-        $translation = $qb->execute()->fetchOne();
-        if ($translation) {
-            $event->setParam('title', $translation);
-        }
+        return is_string($result) ? $result : null;
     }
 
     /**
