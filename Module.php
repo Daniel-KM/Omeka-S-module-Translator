@@ -1096,6 +1096,7 @@ class Module extends AbstractModule
         }
 
         if (!$locale) {
+            $settings = $services->get('Omeka\Settings');
             $locale = $settings->get('locale')
                 ?: $services->get('Config')['translator']['locale']
                 ?: 'en_US';
