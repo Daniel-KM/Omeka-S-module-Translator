@@ -773,7 +773,17 @@ class Module extends AbstractModule
 
         $textsToTranslate = [];
 
-        $pairsLangsSource = array_column($pairs, 'source', 'source');
+        // Build a list of explicit source languages from pairs. Null
+        // source means automatic detection, so any lang is accepted.
+        $pairsLangsSource = [];
+        $hasAutoSourcePair = false;
+        foreach ($pairs as $pair) {
+            if ($pair['source'] === null) {
+                $hasAutoSourcePair = true;
+            } else {
+                $pairsLangsSource[$pair['source']] = $pair['source'];
+            }
+        }
 
         /** @var \Omeka\Api\Representation\ValueRepresentation $value */
         foreach ($allValues as $term => $values) foreach ($values['values'] as $value) {
@@ -814,9 +824,13 @@ class Module extends AbstractModule
                 // The target languages are already filtered.
                 foreach ($pairs as $pair) {
                     $langSource = $pair['source'] ?: $defaultLangSource;
-                    if (isset($pairsLangsSource[$langSource])) {
+                    // Accept the pair when source is explicit and matches,
+                    // or when the pair has no source (auto-detection).
+                    if ($pair['source'] === null
+                        || isset($pairsLangsSource[$langSource])
+                    ) {
                         $langTarget = $pair['target'];
-                        $key = $langSource . '=' . $langTarget;
+                        $key = ($langSource ?? '') . '=' . $langTarget;
                         $textsToTranslate[$key]['source'] = $langSource;
                         $textsToTranslate[$key]['target'] = $langTarget;
                         $textsToTranslate[$key]['texts'][] = $val;
@@ -1035,8 +1049,8 @@ class Module extends AbstractModule
             foreach ($pairs as $pair) {
                 if ($pair['target'] === $siteLocale || strtok($pair['target'], '-') === $siteLocaleShort) {
                     $sitePairs['pairs'][] = $pair;
-                    $sitePairs['source'][$pair['target']] = $pair['target'];
-                    $sitePairs['target'][$pair['source']] = $pair['source'];
+                    $sitePairs['source'][$pair['source']] = $pair['source'];
+                    $sitePairs['target'][$pair['target']] = $pair['target'];
                 }
             }
             $siteSettings->set('translator_lang_pairs', array_map('array_values', $sitePairs), $siteId);
