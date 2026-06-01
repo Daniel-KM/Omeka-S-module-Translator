@@ -29,6 +29,7 @@ class Module extends AbstractModule
      * @see https://developers.deepl.com/docs/getting-started/supported-languages
      */
     public static $langsSupportedInput = [
+        // Core languages.
         'ar' => 'Arabic',
         'bg' => 'Bulgarian',
         'cs' => 'Czech',
@@ -62,6 +63,89 @@ class Module extends AbstractModule
         'uk' => 'Ukrainian',
         'vi' => 'Vietnamese',
         'zh' => 'Chinese',
+        // Extended languages (translation only).
+        'af' => 'Afrikaans',
+        'an' => 'Aragonese',
+        'as' => 'Assamese',
+        'ay' => 'Aymara',
+        'az' => 'Azerbaijani',
+        'ba' => 'Bashkir',
+        'be' => 'Belarusian',
+        'bn' => 'Bengali',
+        'br' => 'Breton',
+        'bs' => 'Bosnian',
+        'ca' => 'Catalan',
+        'cy' => 'Welsh',
+        'eo' => 'Esperanto',
+        'eu' => 'Basque',
+        'fa' => 'Persian',
+        'ga' => 'Irish',
+        'gl' => 'Galician',
+        'gn' => 'Guarani',
+        'gu' => 'Gujarati',
+        'ha' => 'Hausa',
+        'hi' => 'Hindi',
+        'hr' => 'Croatian',
+        'ht' => 'Haitian Creole',
+        'hy' => 'Armenian',
+        'ig' => 'Igbo',
+        'is' => 'Icelandic',
+        'jv' => 'Javanese',
+        'ka' => 'Georgian',
+        'kk' => 'Kazakh',
+        'ky' => 'Kyrgyz',
+        'la' => 'Latin',
+        'lb' => 'Luxembourgish',
+        'ln' => 'Lingala',
+        'mg' => 'Malagasy',
+        'mi' => 'Maori',
+        'mk' => 'Macedonian',
+        'ml' => 'Malayalam',
+        'mn' => 'Mongolian',
+        'mr' => 'Marathi',
+        'ms' => 'Malay',
+        'mt' => 'Maltese',
+        'my' => 'Burmese',
+        'ne' => 'Nepali',
+        'oc' => 'Occitan',
+        'om' => 'Oromo',
+        'pa' => 'Punjabi',
+        'ps' => 'Pashto',
+        'qu' => 'Quechua',
+        'sa' => 'Sanskrit',
+        'sq' => 'Albanian',
+        'sr' => 'Serbian',
+        'st' => 'Sesotho',
+        'su' => 'Sundanese',
+        'sw' => 'Swahili',
+        'ta' => 'Tamil',
+        'te' => 'Telugu',
+        'tg' => 'Tajik',
+        'tk' => 'Turkmen',
+        'tl' => 'Tagalog',
+        'tn' => 'Tswana',
+        'ts' => 'Tsonga',
+        'tt' => 'Tatar',
+        'ur' => 'Urdu',
+        'uz' => 'Uzbek',
+        'wo' => 'Wolof',
+        'xh' => 'Xhosa',
+        'yi' => 'Yiddish',
+        'zu' => 'Zulu',
+        // Extended languages with 3-letter codes.
+        'ace' => 'Acehnese',
+        'bho' => 'Bhojpuri',
+        'ceb' => 'Cebuano',
+        'ckb' => 'Kurdish (Sorani)',
+        'gom' => 'Konkani',
+        'kmr' => 'Kurdish (Kurmanji)',
+        'lmo' => 'Lombard',
+        'mai' => 'Maithili',
+        'pag' => 'Pangasinan',
+        'pam' => 'Kapampangan',
+        'prs' => 'Dari',
+        'scn' => 'Sicilian',
+        'yue' => 'Cantonese',
     ];
 
     /**
@@ -69,6 +153,7 @@ class Module extends AbstractModule
      * @see https://developers.deepl.com/docs/getting-started/supported-languages
      */
     public static $langsSupportedOutput = [
+        // Core languages.
         'ar' => 'Arabic',
         'bg' => 'Bulgarian',
         'cs' => 'Czech',
@@ -94,7 +179,7 @@ class Module extends AbstractModule
         'nl' => 'Dutch',
         'pl' => 'Polish',
         'pt-br' => 'Portuguese (Brazilian)',
-        'pt-pt' => 'Portuguese',
+        'pt-pt' => 'Portuguese (European)',
         'ro' => 'Romanian',
         'ru' => 'Russian',
         'sk' => 'Slovak',
@@ -106,6 +191,89 @@ class Module extends AbstractModule
         'vi' => 'Vietnamese',
         'zh-hans' => 'Chinese (simplified)',
         'zh-hant' => 'Chinese (traditional)',
+        // Extended languages (translation only).
+        'af' => 'Afrikaans',
+        'an' => 'Aragonese',
+        'as' => 'Assamese',
+        'ay' => 'Aymara',
+        'az' => 'Azerbaijani',
+        'ba' => 'Bashkir',
+        'be' => 'Belarusian',
+        'bn' => 'Bengali',
+        'br' => 'Breton',
+        'bs' => 'Bosnian',
+        'ca' => 'Catalan',
+        'cy' => 'Welsh',
+        'eo' => 'Esperanto',
+        'eu' => 'Basque',
+        'fa' => 'Persian',
+        'ga' => 'Irish',
+        'gl' => 'Galician',
+        'gn' => 'Guarani',
+        'gu' => 'Gujarati',
+        'ha' => 'Hausa',
+        'hi' => 'Hindi',
+        'hr' => 'Croatian',
+        'ht' => 'Haitian Creole',
+        'hy' => 'Armenian',
+        'ig' => 'Igbo',
+        'is' => 'Icelandic',
+        'jv' => 'Javanese',
+        'ka' => 'Georgian',
+        'kk' => 'Kazakh',
+        'ky' => 'Kyrgyz',
+        'la' => 'Latin',
+        'lb' => 'Luxembourgish',
+        'ln' => 'Lingala',
+        'mg' => 'Malagasy',
+        'mi' => 'Maori',
+        'mk' => 'Macedonian',
+        'ml' => 'Malayalam',
+        'mn' => 'Mongolian',
+        'mr' => 'Marathi',
+        'ms' => 'Malay',
+        'mt' => 'Maltese',
+        'my' => 'Burmese',
+        'ne' => 'Nepali',
+        'oc' => 'Occitan',
+        'om' => 'Oromo',
+        'pa' => 'Punjabi',
+        'ps' => 'Pashto',
+        'qu' => 'Quechua',
+        'sa' => 'Sanskrit',
+        'sq' => 'Albanian',
+        'sr' => 'Serbian',
+        'st' => 'Sesotho',
+        'su' => 'Sundanese',
+        'sw' => 'Swahili',
+        'ta' => 'Tamil',
+        'te' => 'Telugu',
+        'tg' => 'Tajik',
+        'tk' => 'Turkmen',
+        'tl' => 'Tagalog',
+        'tn' => 'Tswana',
+        'ts' => 'Tsonga',
+        'tt' => 'Tatar',
+        'ur' => 'Urdu',
+        'uz' => 'Uzbek',
+        'wo' => 'Wolof',
+        'xh' => 'Xhosa',
+        'yi' => 'Yiddish',
+        'zu' => 'Zulu',
+        // Extended languages with 3-letter codes.
+        'ace' => 'Acehnese',
+        'bho' => 'Bhojpuri',
+        'ceb' => 'Cebuano',
+        'ckb' => 'Kurdish (Sorani)',
+        'gom' => 'Konkani',
+        'kmr' => 'Kurdish (Kurmanji)',
+        'lmo' => 'Lombard',
+        'mai' => 'Maithili',
+        'pag' => 'Pangasinan',
+        'pam' => 'Kapampangan',
+        'prs' => 'Dari',
+        'scn' => 'Sicilian',
+        'yue' => 'Cantonese',
     ];
 
     /**
@@ -526,7 +694,7 @@ class Module extends AbstractModule
             $langSource = $defaultLangSource;
         }
 
-        // The external service supports only 2-letter codes on input.
+        // DeepL input uses short codes without regionalization.
         $langSource = $langSource
             ? mb_strtolower((string) strtok(strtr($langSource, '_', '-'), '-'))
             : null;
@@ -774,7 +942,7 @@ class Module extends AbstractModule
             $length = mb_strlen($val);
             $lang = (string) $value->lang();
             // Lang codes for values use "-", not "_".
-            // For deepl, the input is always without regionalization.
+            // DeepL input uses short codes without regionalization.
             $langCode = mb_strtolower((string) strtok($lang, '-'));
             // Check exclusion first.
             if (!$val
@@ -1252,7 +1420,7 @@ class Module extends AbstractModule
         $val = (string) $value->value();
         $type = (string) $value->type();
         $lang = (string) $value->lang();
-        // For deepl, the input is always without regionalization.
+        // DeepL input uses short codes without regionalization.
         $langCode = mb_strtolower((string) strtok($lang, '-'));
         if (!$val
             || is_numeric($val)
