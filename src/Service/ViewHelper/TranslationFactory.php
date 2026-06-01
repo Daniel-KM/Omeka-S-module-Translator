@@ -2,7 +2,7 @@
 
 namespace Translator\Service\ViewHelper;
 
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Translator\View\Helper\Translation;
 
