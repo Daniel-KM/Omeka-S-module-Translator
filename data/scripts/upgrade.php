@@ -40,3 +40,12 @@ if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActi
     );
     throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
 }
+
+if (PHP_VERSION_ID < 80100) {
+    $message = new PsrMessage(
+        'This version of module {module} requires a version of php ≥ {version}.', // @translate
+        ['module' => 'Translator', 'version' => '8.1']
+    );
+    $messenger->addError($message);
+    throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
+}
