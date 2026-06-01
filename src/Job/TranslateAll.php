@@ -821,11 +821,15 @@ class TranslateAll extends AbstractJob
                         );
                     }
                     if (!isset(Module::$langsSupportedOutput[$langTarget])) {
-                        $hasError = true;
-                        $this->logger->err(
-                            'Unsupported target language: {lang}.', // @translate
-                            ['lang' => $langTarget]
-                        );
+                        if (isset(Module::$langsSupportedOutputShort[$langTarget])) {
+                            $langTarget = Module::$langsSupportedOutputShort[$langTarget][0];
+                        } else {
+                            $hasError = true;
+                            $this->logger->err(
+                                'Unsupported target language: {lang}.', // @translate
+                                ['lang' => $langTarget]
+                            );
+                        }
                     }
                     if (!$hasError) {
                         $result[] = [

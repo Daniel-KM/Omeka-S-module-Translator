@@ -862,8 +862,14 @@ class Module extends AbstractModule
                         $errors['source'][$langSource] = $langSource;
                     }
                     if (!isset(self::$langsSupportedOutput[$langTarget])) {
-                        $hasError = true;
-                        $errors['target'][$langTarget] = $langTarget;
+                        // Auto-map short codes to default regional
+                        // variant (en → en-gb, pt → pt-pt, etc.).
+                        if (isset(self::$langsSupportedOutputShort[$langTarget])) {
+                            $langTarget = self::$langsSupportedOutputShort[$langTarget][0];
+                        } else {
+                            $hasError = true;
+                            $errors['target'][$langTarget] = $langTarget;
+                        }
                     }
                     if (!$hasError) {
                         $result[] = [
