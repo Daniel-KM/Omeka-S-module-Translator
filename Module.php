@@ -998,6 +998,47 @@ class Module extends AbstractModule
     {
         $this->handleAnySettings($event, 'settings');
         $this->prepareLangsBySite();
+        $this->dispatchTranslateResourcesIfRequested();
+    }
+
+    /**
+     * Dispatch the TranslateAll job if requested via settings form.
+     */
+    protected function dispatchTranslateResourcesIfRequested(): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $translateAll = (bool) $settings->get('translator_translate_resources');
+        // Always reset the flag.
+        $settings->delete('translator_translate_resources');
+
+        if (!$translateAll) {
+            return;
+        }
+
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        $job = $dispatcher->dispatch(
+            \Translator\Job\TranslateAll::class,
+            ['resource_types' => ['items', 'item_sets', 'media']]
+        );
+
+        $plugins = $services->get('ControllerPluginManager');
+        $messenger = $plugins->get('messenger');
+        $url = $plugins->get('url');
+        $message = new PsrMessage(
+            'Translating all resources in background (job {link_job}#{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+            [
+                'link_job' => sprintf('<a href="%s">', htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', $url->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
+                    : sprintf('<a href="%1$s" target="_blank">', $url->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+            ]
+        );
+        $message->setEscapeHtml(false);
+        $messenger->addSuccess($message);
     }
 
     public function handleSiteSettings(Event $event): void

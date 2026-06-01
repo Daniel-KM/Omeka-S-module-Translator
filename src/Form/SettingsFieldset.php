@@ -127,6 +127,21 @@ class SettingsFieldset extends Fieldset
                     'data-placeholder' => 'Select properties…', // @translate
                 ],
             ])
+
+            ->add([
+                'name' => 'translator_translate_resources',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'element_group' => 'internationalisation_resources',
+                    'label' => 'Lauch a job to translate all existing resources', // @translate
+                    'info' => 'Launch a background job to translate all existing resources. Only new texts that have no translation yet will be sent to DeepL.', // @translate
+                    'use_hidden_element' => false,
+                ],
+                'attributes' => [
+                    'id' => 'translator_translate_resources',
+                    'value' => 0,
+                ],
+            ])
         ;
     }
 }

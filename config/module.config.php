@@ -52,6 +52,8 @@ return [
             'translator_lang_source_default' => '',
             'translator_properties_include' => [],
             'translator_properties_exclude' => [],
+            // Not a real setting: trigger for the batch job.
+            'translator_translate_resources' => false,
         ],
         'site_settings' => [
             // Hidden site settings, adapted to site locale.
