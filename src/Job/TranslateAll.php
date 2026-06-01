@@ -56,6 +56,11 @@ class TranslateAll extends AbstractJob
      */
     protected $settings;
 
+    /**
+     * @var bool
+     */
+    protected $quotaExceeded = false;
+
     public function perform(): void
     {
         $services = $this->getServiceLocator();
@@ -134,16 +139,27 @@ class TranslateAll extends AbstractJob
         // Phase 2: for each pair, filter existing translations and
         // translate via DeepL in batches.
         $totalTranslated = 0;
+        $perPairTranslated = [];
+        $perPairRemaining = [];
         foreach ($textsToTranslate as $data) {
+            $langSource = $data['source'];
+            $langTarget = $data['target'];
+            $pairLabel = ($langSource ?: 'auto') . ' → ' . $langTarget;
+            $perPairTranslated[$pairLabel] ??= 0;
+            $perPairRemaining[$pairLabel] ??= 0;
+
             if ($this->shouldStop()) {
                 $this->logger->warn(
                     'Job stopped by user.' // @translate
                 );
-                return;
+                $perPairRemaining[$pairLabel] += count($data['texts']);
+                break;
+            }
+            if ($this->quotaExceeded) {
+                $perPairRemaining[$pairLabel] += count($data['texts']);
+                continue;
             }
 
-            $langSource = $data['source'];
-            $langTarget = $data['target'];
             $texts = $data['texts'];
 
             // Filter existing translations via direct SQL.
@@ -165,18 +181,89 @@ class TranslateAll extends AbstractJob
                 ]
             );
 
+            $countTexts = count($texts);
             $translated = $this->translateAndStore(
                 $texts,
                 $langSource,
                 $langTarget
             );
             $totalTranslated += $translated;
+            $perPairTranslated[$pairLabel] += $translated;
+            $perPairRemaining[$pairLabel] += max(0, $countTexts - $translated);
         }
 
         $this->logger->notice(
             'Batch translation completed: {count} translations created.', // @translate
             ['count' => $totalTranslated]
         );
+
+        $this->logSessionSummary($perPairTranslated, $perPairRemaining);
+        $this->logDatabaseTotals();
+
+        if ($this->quotaExceeded) {
+            $this->logger->warn(
+                'Job aborted: DeepL quota exceeded. Re-run later when quota resets.' // @translate
+            );
+        }
+    }
+
+    /**
+     * Log a per-pair summary of translations created and not translated
+     * during this job session.
+     */
+    protected function logSessionSummary(array $translated, array $remaining): void
+    {
+        if (!$translated && !$remaining) {
+            return;
+        }
+        $this->logger->notice(
+            '--- Session summary ---' // @translate
+        );
+        foreach ($translated as $pair => $count) {
+            $this->logger->notice(
+                '{pair}: {translated} translated, {remaining} not translated.', // @translate
+                [
+                    'pair' => $pair,
+                    'translated' => $count,
+                    'remaining' => $remaining[$pair] ?? 0,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Log total translations stored in DB grouped by source and target
+     * language.
+     */
+    protected function logDatabaseTotals(): void
+    {
+        try {
+            $rows = $this->connection->fetchAllAssociative(
+                'SELECT t.lang AS source_lang, tr.lang AS target_lang, COUNT(*) AS n'
+                . ' FROM translation tr'
+                . ' INNER JOIN translate_text t ON t.id = tr.text_id'
+                . ' GROUP BY t.lang, tr.lang'
+                . ' ORDER BY t.lang, tr.lang'
+            );
+        } catch (\Throwable $e) {
+            return;
+        }
+        if (!$rows) {
+            return;
+        }
+        $this->logger->notice(
+            '--- Database totals (all sessions) ---' // @translate
+        );
+        foreach ($rows as $row) {
+            $this->logger->notice(
+                '{source} → {target}: {count} translations stored.', // @translate
+                [
+                    'source' => $row['source_lang'] ?? 'auto',
+                    'target' => $row['target_lang'],
+                    'count' => (int) $row['n'],
+                ]
+            );
+        }
     }
 
     /**
@@ -737,7 +824,7 @@ class TranslateAll extends AbstractJob
         $nextLog = 1000;
 
         foreach ($chunks as $chunk) {
-            if ($this->shouldStop()) {
+            if ($this->shouldStop() || $this->quotaExceeded) {
                 break;
             }
 
@@ -747,6 +834,9 @@ class TranslateAll extends AbstractJob
                 $langTarget
             );
 
+            if ($this->quotaExceeded) {
+                break;
+            }
             if (!$translations) {
                 continue;
             }
@@ -859,9 +949,21 @@ class TranslateAll extends AbstractJob
         try {
             return $deeplClient->translateText($texts, $langSource, $langTarget, $options);
         } catch (\DeepL\DeepLException $e) {
+            $message = $e->getMessage();
+            if (
+                $e instanceof \DeepL\QuotaExceededException
+                || stripos($message, 'quota') !== false
+            ) {
+                $this->quotaExceeded = true;
+                $this->logger->err(
+                    'DeepL quota exceeded: {error}. Aborting job.', // @translate
+                    ['error' => $message]
+                );
+                return [];
+            }
             $this->logger->err(
                 'DeepL translation failed: {error}', // @translate
-                ['error' => $e->getMessage()]
+                ['error' => $message]
             );
             return [];
         }
