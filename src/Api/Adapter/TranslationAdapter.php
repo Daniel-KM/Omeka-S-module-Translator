@@ -139,7 +139,6 @@ class TranslationAdapter extends AbstractEntityAdapter implements EventSubscribe
         ) {
             $string = trim((string) ($data['o:string'] ?? ''));
             $lang = trim((string) ($data['o:lang_source'] ?? '')) ?: null;
-            $text = null;
             if (Request::CREATE === $request->getOperation()) {
                 $text = $this->getOrCreateText($string, $lang, true);
             } else {
@@ -147,11 +146,13 @@ class TranslationAdapter extends AbstractEntityAdapter implements EventSubscribe
                 $existingLang = $existingText->getLang();
                 $existingString = $existingText->getString();
                 // Keep the existing text if string and lang are not updated.
-                if ($string !== $existingString || $lang !== $existingLang) {
+                if ($string === $existingString && $lang === $existingLang) {
+                    $text = $existingText;
+                } else {
                     // If there is a new string or lang, check existing text.
                     $text = $this->getOrCreateText($string, $lang, false);
                     if ($text) {
-                        // Remove existing text if not linked to another,
+                        // Remove existing text if not linked to another
                         // translation.
                         // TODO Copy and keep existing translation.
                         if ($existingText->getTranslations()->count() <= 1) {
@@ -161,7 +162,7 @@ class TranslationAdapter extends AbstractEntityAdapter implements EventSubscribe
                         // Keep existing text if not linked to another translation.
                         $text = $existingText->setString($string)->setLang($lang);
                     } else {
-                        $this->getOrCreateText($string, $lang, true);
+                        $text = $this->getOrCreateText($string, $lang, true);
                     }
                 }
             }
@@ -209,13 +210,11 @@ class TranslationAdapter extends AbstractEntityAdapter implements EventSubscribe
         self::$texts = [];
     }
 
-    protected function getOrCreateText(string $string, ?string $lang, bool $create): Text
+    protected function getOrCreateText(string $string, ?string $lang, bool $create): ?Text
     {
-        $lang = $lang ?: '';
+        $cacheKey = sha1('/' . ($lang ?? '') . '/' . $string . '/');
 
-        $cacheKey = sha1('/' . $lang . '/' . $string . '/');
-
-        if (isset(self::$texts[$cacheKey])) {
+        if (array_key_exists($cacheKey, self::$texts)) {
             return self::$texts[$cacheKey];
         }
 

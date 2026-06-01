@@ -380,7 +380,7 @@ class Module extends AbstractModule
         $messenger = $plugins->get('messenger');
         $messenger->addWarning((new PsrMessage(
             'Fill your DeepL api key, then set languages to translate in {link}main settings{link_end}.', // @translate
-            ['link' => sprintf('<a href="%s">', $url->fromRoute('admin/default', ['controller' => 'setting'], ['fragment' => 'translator'])), 'link_end' => '</a>']
+            ['link' => sprintf('<a href="%s">', htmlspecialchars($url->fromRoute('admin/default', ['controller' => 'setting'], ['fragment' => 'translator']))), 'link_end' => '</a>']
         ))->setEscapeHtml(false));
     }
 
@@ -634,9 +634,10 @@ class Module extends AbstractModule
 
     public function translateValue(ValueRepresentation $value): ?string
     {
-        static $currentLocale;
+        static $localeSite;
         static $langTargets;
         static $defaultLangSource;
+        static $initialized = false;
 
         /**
          * @var \Omeka\Api\Manager $api
@@ -660,7 +661,8 @@ class Module extends AbstractModule
 
         $services = $this->getServiceLocator();
 
-        if ($currentLocale === null) {
+        if (!$initialized) {
+            $initialized = true;
             $localeSite = $this->getLocaleCurrentSite();
 
             $siteSettings = $services->get('Omeka\Settings\Site');
@@ -751,42 +753,7 @@ class Module extends AbstractModule
      *
      * Adapted:
      * @see \Internationalisation\Module::getLocales()
-     * @see \Translator\Module::getLanguagePairsOfSite()
      */
-    protected function getLanguagePairsOfSite(): array
-    {
-        static $pairsOfCurrentSite;
-
-        if (is_array($pairsOfCurrentSite)) {
-            return $pairsOfCurrentSite;
-        }
-
-        $pairsOfCurrentSite = [];
-
-        /**
-         * @var \Omeka\Mvc\Status $status
-         * @var \Omeka\Settings\SiteSettings $siteSettings
-         * @var \Common\View\Helper\DefaultSite $defaultSite
-         * @var \Omeka\Mvc\Controller\Plugin\CurrentSite $currentSite
-         */
-        $services = $this->getServiceLocator();
-        $status = $services->get('Omeka\Status');
-
-        if ($status->isSiteRequest()) {
-            $siteSettings = $services->get('Omeka\Settings\Site');
-            try {
-                $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', []);
-            } catch (\Exception $e) {
-                $siteId = $this->getCurrentOrDefaultSiteId();
-                if ($siteId) {
-                    $pairsOfCurrentSite = $siteSettings->get('translator_lang_pairs', [], $siteId);
-                }
-            }
-        }
-
-        return $pairsOfCurrentSite;
-    }
-
     public function handleSavePost(Event $event): void
     {
         $services = $this->getServiceLocator();
@@ -894,7 +861,7 @@ class Module extends AbstractModule
         $propertiesToInclude = array_diff_key($propertiesToInclude, $propertySizes);
 
         $propertiesToExclude = array_combine($propertiesToExclude, $propertiesToExclude);
-        $sizeLimitToExclude = array_intersect_key($propertiesToExclude, $propertySizes);
+        $sizeLimitToExclude = array_intersect_key($propertySizes, $propertiesToExclude);
         $propertiesToExclude = array_diff_key($propertiesToExclude, $propertySizes);
 
         $propertiesToInclude = array_diff_key($propertiesToInclude, $propertiesToExclude);
@@ -986,13 +953,14 @@ class Module extends AbstractModule
                         $textsToTranslate[$key]['texts'][] = $val;
                     }
                 }
-                // Avoid duplication of texts.
-                foreach ($textsToTranslate as &$data) {
-                    $data['texts'] = array_values(array_unique($data['texts']));
-                }
-                unset($data);
             }
         }
+
+        // Deduplicate texts once after the full loop.
+        foreach ($textsToTranslate as &$data) {
+            $data['texts'] = array_values(array_unique($data['texts']));
+        }
+        unset($data);
 
         return $textsToTranslate;
     }
@@ -1147,7 +1115,15 @@ class Module extends AbstractModule
             \DeepL\TranslateTextOptions::IGNORE_TAGS => null,
         ];
 
-        return $deeplClient->translateText($texts, $langSource, $langTarget, $options);
+        try {
+            return $deeplClient->translateText($texts, $langSource, $langTarget, $options);
+        } catch (\DeepL\DeepLException $e) {
+            $logger->err(
+                'DeepL translation failed: {error}', // @translate
+                ['error' => $e->getMessage()]
+            );
+            return [];
+        }
     }
 
     public function handleMainSettings(Event $event): void
@@ -1189,8 +1165,8 @@ class Module extends AbstractModule
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', $url->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
-                    : sprintf('<a href="%1$s" target="_blank">', $url->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($url->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
             ]
         );
         $message->setEscapeHtml(false);
@@ -1292,7 +1268,7 @@ class Module extends AbstractModule
      * Adapted:
      * @see \Internationalisation\Module::getLocales()
      * @see \Translator\Module::getLocaleCurrentSite()
-     * @see \Translator\Module::getLanguagePairsOfSite()
+
      */
      protected function getLocaleCurrentSite(): string
     {
@@ -1389,15 +1365,14 @@ class Module extends AbstractModule
 
             // Here, the size is not managed, unlike during save.
             // In particular, the size may have been changed.
-            $propertiesToInclude = array_combine($propertiesToInclude, $propertiesToInclude);
-            if (array_intersect_key($propertySizes, $propertiesToInclude)) {
+            if (in_array('properties', $propertiesToInclude)) {
                 $propertiesToInclude = $easyMeta->propertyTerms();
             }
+            $propertiesToInclude = array_combine($propertiesToInclude, $propertiesToInclude);
+            $propertiesToInclude = array_diff_key($propertiesToInclude, $propertySizes);
 
             $propertiesToExclude = array_combine($propertiesToExclude, $propertiesToExclude);
             $propertiesToExclude = array_diff_key($propertiesToExclude, $propertySizes);
-            $propertiesToInclude = array_combine($propertiesToInclude, $propertiesToInclude);
-            $propertiesToInclude = array_diff_key($propertiesToInclude, $propertySizes);
             $propertiesToInclude = array_diff_key($propertiesToInclude, $propertiesToExclude);
         }
 
@@ -1433,6 +1408,7 @@ class Module extends AbstractModule
             || strpos($type, 'geometry:') === 0
             || strpos($type, 'numeric:') === 0
             || $langCode === $langTarget
+            || $langCode === $langTargetShort
             || (!$langCode && $isSkipEmptyLang)
             || ($langCode && !isset(self::$langsSupportedInput[$langCode]))
             || !(isset(self::$langsSupportedOutput[$langTarget])
