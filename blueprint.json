@@ -44,7 +44,7 @@
       "state": "activate",
       "source": {
         "type": "url",
-        "url": "https://github.com/Daniel-KM/Omeka-S-module-Common/releases/download/3.4.81/Common-3.4.81.zip"
+        "url": "https://github.com/Daniel-KM/Omeka-S-module-Common/releases/download/3.4.86/Common-3.4.86.zip"
       }
     },
     {
@@ -52,7 +52,7 @@
       "state": "activate",
       "source": {
         "type": "url",
-        "url": "https://github.com/Daniel-KM/Omeka-S-module-Translator/releases/download/3.4.2/Translator-3.4.2.zip"
+        "url": "https://github.com/Daniel-KM/Omeka-S-module-Translator/releases/download/3.4.3/Translator-3.4.3.zip"
       }
     }
   ],

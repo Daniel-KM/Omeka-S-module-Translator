@@ -38,7 +38,8 @@ if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActi
         $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
         'Common', '3.4.86'
     );
-    throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+    $messenger->addError($message);
+    throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
 }
 
 if (PHP_VERSION_ID < 80100) {
@@ -48,4 +49,27 @@ if (PHP_VERSION_ID < 80100) {
     );
     $messenger->addError($message);
     throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
+}
+
+if (version_compare((string) $oldVersion, '3.4.4', '<')) {
+    $sizeKeys = [
+        'properties_max_500',
+        'properties_max_1000',
+        'properties_max_5000',
+        'properties_min_500',
+        'properties_min_1000',
+        'properties_min_5000',
+    ];
+    foreach (['include', 'exclude'] as $direction) {
+        $key = 'translator_properties_' . $direction;
+        $values = (array) $settings->get($key, []);
+        $sizes = array_values(array_intersect($values, $sizeKeys));
+        $rest = array_values(array_diff($values, $sizeKeys));
+        $settings->set($key, $rest);
+        $settings->set($key . '_size', $sizes[0] ?? '');
+    }
+    $messenger->addSuccess(new PsrMessage(
+        'Setting "{key}" was split into "{key}" + "{key}_size".', // @translate
+        ['key' => 'translator_properties_include']
+    ));
 }
