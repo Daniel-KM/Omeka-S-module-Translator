@@ -621,70 +621,42 @@ class Module extends AbstractModule
 
     public function handleSavePost(Event $event): void
     {
-        /**
-         * @var \Omeka\Api\Manager $api
-         * @var \Omeka\Api\Request $request
-         * @var \Omeka\Settings\Settings $settings
-         * @var \Common\Stdlib\EasyMeta $easyMeta
-         * @var \Omeka\Entity\Resource $resource
-         * @var \Omeka\Api\Adapter\AbstractEntityAdapter $adapter
-         */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        // Quick checks.
-
-        $deeplApiKey = $settings->get('translator_deepl_api_key');
-        if (!$deeplApiKey) {
+        // Quick checks: avoid further processing when the module is not
+        // configured to translate.
+        if (!$settings->get('translator_deepl_api_key')) {
             return;
         }
-
-        $propertiesToInclude = $settings->get('translator_properties_include', []);
-        if (!$propertiesToInclude) {
+        if (!$settings->get('translator_properties_include', [])) {
             return;
         }
 
         // This is an api-post event, so id is ready and checks are done.
-
         $resource = $event->getParam('response')->getContent();
         $adapter = $event->getTarget();
-        $resource = $adapter->getRepresentation($resource);
-
-        $textsToTranslate = $this->filterValuesToTranslate($resource);
-        if (!$textsToTranslate) {
+        $id = $resource->getId();
+        if (!$id) {
+            return;
+        }
+        $resourceName = method_exists($adapter, 'getResourceName')
+            ? $adapter->getResourceName()
+            : null;
+        if (!$resourceName) {
             return;
         }
 
-        $results = [];
-        foreach ($textsToTranslate as $langAndTexts) {
-            // The lang source may be null for automatic detection.
-            $texts = $langAndTexts['texts'];
-            $langSource = $langAndTexts['source'];
-            $langTarget = $langAndTexts['target'];
-            $texts = $this->filterExistingTranslations($texts, $langSource, $langTarget);
-            if ($texts) {
-                $texts = array_values($texts);
-                $translations = $this->translateDeepL($texts, $langSource, $langTarget);
-                foreach ($translations as $key => $translation) {
-                    $results[] = [
-                        'o:string' => $texts[$key],
-                        'o:lang_source' => $langSource,
-                        'o:lang_target' => $langTarget,
-                        'o:translation' => $translation->text,
-                        'o:automatic' => true,
-                    ];
-                }
-            }
-        }
-
-        if (!$results) {
-            return;
-        }
-
-        // The results contain only new translations, because existing ones were
-        // skipped above.
-        $api = $services->get('Omeka\ApiManager');
-        $api->batchCreate('translations', $results, [], ['continueOnError' => true]);
+        // Defer translation to a background job. Multiple saves in the same
+        // request (batch create, import) are collapsed into a single job
+        // dispatched at shutdown.
+        /** @var \Common\Stdlib\DeferredJobDispatch $deferred */
+        $deferred = $services->get('Common\DeferredJobDispatch');
+        $deferred->defer(
+            \Translator\Job\TranslateResources::class,
+            'translator_resources',
+            ['refs' => $resourceName . ':' . $id]
+        );
     }
 
     /**
@@ -694,7 +666,7 @@ class Module extends AbstractModule
      * value. Each array contains the source language, the target language and a
      * list of texts. The source language may be null for automatic detection.
      */
-    protected function filterValuesToTranslate(AbstractResourceEntityRepresentation $resource): array
+    public function filterValuesToTranslate(AbstractResourceEntityRepresentation $resource): array
     {
         /**
          * @var \Omeka\Settings\Settings $settings
@@ -911,7 +883,7 @@ class Module extends AbstractModule
         return array_values(array_unique($result, SORT_REGULAR));
     }
 
-    protected function filterExistingTranslations(array $strings, ?string $langSource, string $langTarget): array
+    public function filterExistingTranslations(array $strings, ?string $langSource, string $langTarget): array
     {
         /**
          * @var \Omeka\Api\Manager $api
@@ -939,7 +911,7 @@ class Module extends AbstractModule
         return array_diff($strings, $existingStrings);
     }
 
-    protected function translateDeepL(array $texts, ?string $langSource, string $langTarget, array $options = []): array
+    public function translateDeepL(array $texts, ?string $langSource, string $langTarget, array $options = []): array
     {
         /**
          * @var \Omeka\Settings\Settings $settings
