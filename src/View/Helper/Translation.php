@@ -39,7 +39,7 @@ class Translation extends AbstractHelper
                 return $asRepresentation
                     ? $this->api->read('translations', ['id' => $idOrString])->getContent()
                     : $this->api->read('translations', ['id' => $idOrString], [], ['returnScalar' => 'translation'])->getContent();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return null;
             }
         }
@@ -62,7 +62,7 @@ class Translation extends AbstractHelper
             $result = $asRepresentation
                 ? $this->api->search('translations', $data)->getContent()
                 : $this->api->search('translations', $data, ['returnScalar' => 'translation'])->getContent();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return null;
         }
 

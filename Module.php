@@ -498,7 +498,7 @@ class Module extends AbstractModule
             $siteSettings = $services->get('Omeka\Settings\Site');
             try {
                 $langTargets = $siteSettings->get('translator_lang_fallbacks', []);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $siteId = $this->getCurrentOrDefaultSiteId();
                 $langTargets = $siteId
                     ? $siteSettings->get('translator_lang_fallbacks', [], $siteId)
@@ -1151,7 +1151,7 @@ class Module extends AbstractModule
 
         try {
             $locale = $siteSettings->get('locale');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $siteId = $this->getCurrentOrDefaultSiteId();
             if ($siteId) {
                 $locale = $siteSettings->get('locale', null, $siteId);
