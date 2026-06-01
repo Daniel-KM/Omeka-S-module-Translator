@@ -19,7 +19,7 @@ class Translation extends AbstractHelper
     }
 
     /**
-     * Get the translation representation.
+     * Get the translation of a id or a string or its representation.
      *
      * @param array $options
      * - as_representation (bool): false (default)
@@ -38,7 +38,7 @@ class Translation extends AbstractHelper
             try {
                 return $asRepresentation
                     ? $this->api->read('translations', ['id' => $idOrString])->getContent()
-                    : $this->api->read('translations', ['id' => $idOrString], ['returnScalar' => 'translation'])->getContent();
+                    : $this->api->read('translations', ['id' => $idOrString], [], ['returnScalar' => 'translation'])->getContent();
             } catch (\Exception $e) {
                 return null;
             }
