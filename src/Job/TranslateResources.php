@@ -46,11 +46,20 @@ class TranslateResources extends AbstractJob
             return;
         }
 
+        $totalRefs = count($refs);
+        $logStep = $totalRefs >= 1000 ? 100 : 50;
+        $logger->info(
+            'Translator: starting translation of {count} resources.', // @translate
+            ['count' => $totalRefs]
+        );
+
         $results = [];
+        $processed = 0;
         foreach ($refs as $ref) {
             if ($this->shouldStop()) {
                 break;
             }
+            $processed++;
             [$resourceName, $id] = array_pad(explode(':', $ref, 2), 2, null);
             if (!$resourceName || !$id) {
                 continue;
@@ -62,6 +71,18 @@ class TranslateResources extends AbstractJob
             }
 
             $texts = $module->filterValuesToTranslate($resource);
+            if ($processed % $logStep === 0 || $processed === $totalRefs) {
+                $memMb = (int) round(memory_get_usage(true) / 1048576);
+                $logger->info(
+                    'Translator: {done}/{total} resources processed, {created} translations queued, {mem} MB memory.', // @translate
+                    [
+                        'done' => $processed,
+                        'total' => $totalRefs,
+                        'created' => count($results),
+                        'mem' => $memMb,
+                    ]
+                );
+            }
             if (!$texts) {
                 continue;
             }

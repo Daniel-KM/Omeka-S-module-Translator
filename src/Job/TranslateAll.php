@@ -325,6 +325,8 @@ class TranslateAll extends AbstractJob
             );
 
             $offset = 0;
+            $processed = 0;
+            $logStep = $totalResources >= 10000 ? 1000 : 200;
             while (true) {
                 if ($this->shouldStop()) {
                     break 2;
@@ -340,6 +342,7 @@ class TranslateAll extends AbstractJob
                 }
 
                 foreach ($resources as $resource) {
+                    $processed++;
                     $values = $resource->values();
                     $values = array_intersect_key($values, $propertiesToInclude);
                     foreach ($values as $valueInfo) {
@@ -377,6 +380,24 @@ class TranslateAll extends AbstractJob
                 unset($resources);
                 $this->entityManager->clear();
                 $offset += self::RESOURCE_BATCH;
+
+                if ($processed % $logStep === 0 || $offset >= $totalResources) {
+                    $uniqueTexts = 0;
+                    foreach ($textsToTranslate as $data) {
+                        $uniqueTexts += count($data['texts'] ?? []);
+                    }
+                    $memMb = (int) round(memory_get_usage(true) / 1048576);
+                    $this->logger->info(
+                        '{type}: {done}/{total} processed, {unique} unique texts collected, {mem} MB memory.', // @translate
+                        [
+                            'type' => $resourceType,
+                            'done' => min($processed, $totalResources),
+                            'total' => $totalResources,
+                            'unique' => $uniqueTexts,
+                            'mem' => $memMb,
+                        ]
+                    );
+                }
             }
         }
 
