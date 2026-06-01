@@ -99,7 +99,7 @@ class TranslateAll extends AbstractJob
         }
 
         $resourceTypes = $this->getArg('resource_types')
-            ?: ['items', 'item_sets', 'media'];
+            ?: ['items', 'item_sets', 'media', 'digital_objects'];
 
         $this->logger->notice(
             'Starting batch translation for: {types}.', // @translate
@@ -474,6 +474,7 @@ class TranslateAll extends AbstractJob
             'items' => 'Omeka\\Entity\\Item',
             'item_sets' => 'Omeka\\Entity\\ItemSet',
             'media' => 'Omeka\\Entity\\Media',
+            'digital_objects' => 'DigitalObject\\Entity\\DigitalObject',
         ];
         $resourceClasses = [];
         foreach ($resourceTypes as $rt) {
