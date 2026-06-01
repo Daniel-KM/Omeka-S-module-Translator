@@ -540,6 +540,13 @@ class TranslateAll extends AbstractJob
 
     /**
      * Filter texts that already have a translation, using direct SQL.
+     *
+     * Uses JSON_TABLE so the diff runs entirely in SQL with the same
+     * collation on both sides (avoids byte/collation asymmetry on
+     * apostrophes, accents, NFC/NFD, ligatures, etc.). Falls back to
+     * a PHP array_diff (byte-exact) on older databases — DeepL may then
+     * be called for a few false-negatives, but the per-item try/catch
+     * in translateAndStore prevents DB duplicates.
      */
     protected function filterExistingTranslationsSql(
         array $strings,
@@ -548,6 +555,10 @@ class TranslateAll extends AbstractJob
     ): array {
         if (!$strings) {
             return [];
+        }
+
+        if ($this->supportsJsonTable()) {
+            return $this->filterExistingTranslationsJsonTable($strings, $langSource, $langTarget);
         }
 
         $existing = [];
@@ -581,6 +592,88 @@ class TranslateAll extends AbstractJob
         }
 
         return array_values(array_diff($strings, $existing));
+    }
+
+    /**
+     * Filter via JSON_TABLE so the WHERE NOT EXISTS uses the column
+     * collation on both sides. Returns only strings without translation.
+     */
+    protected function filterExistingTranslationsJsonTable(
+        array $strings,
+        ?string $langSource,
+        string $langTarget
+    ): array {
+        $remaining = [];
+        $sourceClause = $langSource
+            ? 't.lang = :lang_source'
+            : 't.lang IS NULL';
+
+        $sql = 'SELECT input.s'
+            . ' FROM JSON_TABLE(:input_json, \'$[*]\' COLUMNS(s LONGTEXT PATH \'$\')) input'
+            . ' WHERE NOT EXISTS ('
+            . '   SELECT 1 FROM translate_text t'
+            . '   INNER JOIN translation tr ON tr.text_id = t.id'
+            . '   WHERE t.string = input.s'
+            . '     AND tr.lang = :lang_target'
+            . '     AND ' . $sourceClause
+            . ' )';
+
+        foreach (array_chunk($strings, 500) as $chunk) {
+            $params = [
+                'input_json' => json_encode(array_values($chunk), JSON_UNESCAPED_UNICODE),
+                'lang_target' => $langTarget,
+            ];
+            if ($langSource) {
+                $params['lang_source'] = $langSource;
+            }
+            $rows = $this->connection
+                ->executeQuery($sql, $params)
+                ->fetchFirstColumn();
+            foreach ($rows as $r) {
+                $remaining[] = (string) $r;
+            }
+        }
+        return $remaining;
+    }
+
+    /**
+     * Detect once if the DB server supports JSON_TABLE
+     * (MariaDB ≥ 10.6, MySQL ≥ 8.0.4). Logs a warning when the
+     * fallback path is used.
+     */
+    protected function supportsJsonTable(): bool
+    {
+        static $cached;
+        if ($cached !== null) {
+            return $cached;
+        }
+        try {
+            $version = (string) $this->connection->fetchOne('SELECT VERSION()');
+        } catch (\Throwable $e) {
+            $cached = false;
+            return $cached;
+        }
+        $isMaria = stripos($version, 'mariadb') !== false;
+        if (preg_match('/^(\d+)\.(\d+)\.(\d+)/', $version, $m)) {
+            $major = (int) $m[1];
+            $minor = (int) $m[2];
+            $patch = (int) $m[3];
+            if ($isMaria) {
+                $cached = ($major > 10) || ($major === 10 && $minor >= 6);
+            } else {
+                $cached = ($major > 8)
+                    || ($major === 8 && ($minor > 0 || $patch >= 4));
+            }
+        } else {
+            $cached = false;
+        }
+        if (!$cached) {
+            $this->logger->warn(
+                'Database {version} does not support JSON_TABLE; using byte-exact fallback. Some translated strings may be re-sent to DeepL when collation collapses (apostrophes, accents, NFC/NFD, ligatures). Per-item try/catch prevents DB duplicates but burns quota.', // @translate
+                ['version' => $version]
+            );
+        }
+        return $cached;
     }
 
     /**
