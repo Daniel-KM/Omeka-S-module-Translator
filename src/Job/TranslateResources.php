@@ -114,6 +114,15 @@ class TranslateResources extends AbstractJob
             return;
         }
 
+        // Global dedup: same (string, source, target) can appear across
+        // resources. Keep first occurrence.
+        $unique = [];
+        foreach ($results as $r) {
+            $key = $r['o:lang_source'] . '|' . $r['o:lang_target'] . '|' . $r['o:string'];
+            $unique[$key] ??= $r;
+        }
+        $results = array_values($unique);
+
         $api->batchCreate('translations', $results, [], ['continueOnError' => true]);
         $logger->info(
             'Translator: stored {count} translations for {resources} resources.', // @translate

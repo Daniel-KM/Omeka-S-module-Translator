@@ -950,9 +950,11 @@ class Module extends AbstractModule
                 || $value->valueResource()
                 // TODO Manage html and xml via option tag_handling and other options, so process them separately.
                 || in_array($type, ['boolean', 'json', 'html', 'xml', 'place'])
+                || in_array($type, ['geography', 'geometry'])
                 || strpos($type, 'geographic:') === 0
                 || strpos($type, 'geometry:') === 0
                 || strpos($type, 'numeric:') === 0
+                || preg_match('~^\s*(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s*[ZM]*\s*\(~i', $val)
                 || ($sizeLimitToExcludeMax && $length <= $sizeLimitToExcludeMax)
                 || ($sizeLimitToExcludeMin && $length > $sizeLimitToExcludeMin)
                 || (!$langCode && $isSkipEmptyLang)

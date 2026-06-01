@@ -364,9 +364,11 @@ class TranslateAll extends AbstractJob
                                 || is_numeric($val)
                                 || $value->valueResource()
                                 || in_array($type, ['boolean', 'json', 'html', 'xml', 'place'])
+                                || in_array($type, ['geography', 'geometry'])
                                 || strpos($type, 'geographic:') === 0
                                 || strpos($type, 'geometry:') === 0
                                 || strpos($type, 'numeric:') === 0
+                                || preg_match('~^\s*(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s*[ZM]*\s*\(~i', $val)
                                 || (!$langCode && $isSkipEmptyLang)
                                 || ($langCode && !isset(Module::$langsSupportedInput[$langCode]))
                             ) {
