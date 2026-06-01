@@ -102,7 +102,7 @@ class TranslateAll extends AbstractJob
         );
 
         // Phase 1: collect all unique texts from resources.
-        $textsToTranslate = $this->collectTexts(
+        $textsToTranslate = $this->collectTextsSql(
             $resourceTypes,
             $pairs,
             $propertiesToInclude
@@ -303,6 +303,242 @@ class TranslateAll extends AbstractJob
     }
 
     /**
+     * Collect all unique texts via direct SQL on the value table.
+     *
+     * Bypasses the API/ORM hydration path used by collectTexts() because
+     * iterating hundreds of thousands of resources via Doctrine
+     * representations is orders of magnitude slower than a single
+     * filtered scan of the value table.
+     */
+    protected function collectTextsSql(
+        array $resourceTypes,
+        array $pairs,
+        array $propertiesToInclude
+    ): array {
+        $services = $this->getServiceLocator();
+        $easyMeta = $services->get('Common\EasyMeta');
+
+        $defaultLangSource = $this->settings->get('translator_lang_source_default');
+        $isSkipEmptyLang = $defaultLangSource === 'skip'
+            || ($defaultLangSource
+                && !isset(Module::$langsSupportedInput[$defaultLangSource]));
+        if (!$defaultLangSource
+            || $defaultLangSource === 'auto'
+            || $defaultLangSource === 'skip'
+        ) {
+            $defaultLangSource = null;
+        }
+
+        if (in_array('properties', $propertiesToInclude)) {
+            $propertiesToInclude = $easyMeta->propertyTerms();
+        }
+        $propertiesToExclude = $this->settings->get('translator_properties_exclude', []);
+        $sizeExclude = $this->settings->get('translator_properties_exclude_size', '');
+        if ($sizeExclude) {
+            $propertiesToExclude[] = $sizeExclude;
+        }
+
+        $propertySizesMax = [
+            'properties_max_500' => 500,
+            'properties_max_1000' => 1000,
+            'properties_max_5000' => 5000,
+        ];
+        $propertySizesMin = [
+            'properties_min_500' => 500,
+            'properties_min_1000' => 1000,
+            'properties_min_5000' => 5000,
+        ];
+        $propertySizes = $propertySizesMax + $propertySizesMin;
+
+        $includeMaxKey = current(array_intersect(array_keys($propertySizesMax), $propertiesToInclude));
+        $includeMinKey = current(array_intersect(array_keys($propertySizesMin), $propertiesToInclude));
+        $excludeMaxKey = current(array_intersect(array_keys($propertySizesMax), $propertiesToExclude));
+        $excludeMinKey = current(array_intersect(array_keys($propertySizesMin), $propertiesToExclude));
+        $sizeIncludeMax = $includeMaxKey ? $propertySizesMax[$includeMaxKey] : null;
+        $sizeIncludeMin = $includeMinKey ? $propertySizesMin[$includeMinKey] : null;
+        $sizeExcludeMax = $excludeMaxKey ? $propertySizesMax[$excludeMaxKey] : null;
+        $sizeExcludeMin = $excludeMinKey ? $propertySizesMin[$excludeMinKey] : null;
+
+        $termsToInclude = array_values(array_diff($propertiesToInclude, array_keys($propertySizes)));
+        $termsToExclude = array_values(array_diff($propertiesToExclude, array_keys($propertySizes)));
+
+        $includeIds = $termsToInclude
+            ? array_values(array_filter(array_map(
+                fn ($term) => $easyMeta->propertyId($term),
+                $termsToInclude
+            )))
+            : [];
+        $excludeIds = $termsToExclude
+            ? array_values(array_filter(array_map(
+                fn ($term) => $easyMeta->propertyId($term),
+                $termsToExclude
+            )))
+            : [];
+
+        $hasSizeFilter = $sizeIncludeMax !== null || $sizeIncludeMin !== null;
+        if (!$includeIds && !$hasSizeFilter) {
+            $this->logger->err(
+                'No resolvable properties to include.' // @translate
+            );
+            return [];
+        }
+
+        $resourceTypeMap = [
+            'items' => 'Omeka\\Entity\\Item',
+            'item_sets' => 'Omeka\\Entity\\ItemSet',
+            'media' => 'Omeka\\Entity\\Media',
+        ];
+        $resourceClasses = [];
+        foreach ($resourceTypes as $rt) {
+            if (isset($resourceTypeMap[$rt])) {
+                $resourceClasses[] = $resourceTypeMap[$rt];
+            }
+        }
+        if (!$resourceClasses) {
+            return [];
+        }
+
+        $supportedLangs = array_keys(Module::$langsSupportedInput);
+
+        $where = [
+            'v.value IS NOT NULL',
+            "v.value <> ''",
+            'v.value_resource_id IS NULL',
+            "v.type NOT IN ('boolean','json','html','xml','place','geography','geometry')",
+            "v.type NOT LIKE 'numeric:%'",
+            "v.type NOT LIKE 'geographic:%'",
+            "v.type NOT LIKE 'geometry:%'",
+            'r.resource_type IN (:res_types)',
+        ];
+        $params = ['res_types' => $resourceClasses];
+        $types = ['res_types' => \Doctrine\DBAL\Connection::PARAM_STR_ARRAY];
+
+        if ($hasSizeFilter && $includeIds) {
+            $where[] = '(v.property_id IN (:include_ids) OR ('
+                . ($sizeIncludeMax !== null ? 'CHAR_LENGTH(v.value) <= :size_inc_max' : '1=1')
+                . ($sizeIncludeMin !== null
+                    ? ($sizeIncludeMax !== null ? ' AND ' : '')
+                        . 'CHAR_LENGTH(v.value) > :size_inc_min'
+                    : '')
+                . '))';
+            $params['include_ids'] = $includeIds;
+            $types['include_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+            if ($sizeIncludeMax !== null) {
+                $params['size_inc_max'] = $sizeIncludeMax;
+            }
+            if ($sizeIncludeMin !== null) {
+                $params['size_inc_min'] = $sizeIncludeMin;
+            }
+        } elseif ($includeIds) {
+            $where[] = 'v.property_id IN (:include_ids)';
+            $params['include_ids'] = $includeIds;
+            $types['include_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+        } else {
+            if ($sizeIncludeMax !== null) {
+                $where[] = 'CHAR_LENGTH(v.value) <= :size_inc_max';
+                $params['size_inc_max'] = $sizeIncludeMax;
+            }
+            if ($sizeIncludeMin !== null) {
+                $where[] = 'CHAR_LENGTH(v.value) > :size_inc_min';
+                $params['size_inc_min'] = $sizeIncludeMin;
+            }
+        }
+
+        if ($excludeIds) {
+            $where[] = 'v.property_id NOT IN (:exclude_ids)';
+            $params['exclude_ids'] = $excludeIds;
+            $types['exclude_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+        }
+        if ($sizeExcludeMax !== null) {
+            $where[] = 'CHAR_LENGTH(v.value) > :size_exc_max';
+            $params['size_exc_max'] = $sizeExcludeMax;
+        }
+        if ($sizeExcludeMin !== null) {
+            $where[] = 'CHAR_LENGTH(v.value) <= :size_exc_min';
+            $params['size_exc_min'] = $sizeExcludeMin;
+        }
+
+        if ($isSkipEmptyLang) {
+            $where[] = 'v.lang IS NOT NULL';
+        }
+        if ($supportedLangs) {
+            $where[] = '(v.lang IS NULL OR LOWER(SUBSTRING_INDEX(v.lang, \'-\', 1)) IN (:langs))';
+            $params['langs'] = $supportedLangs;
+            $types['langs'] = \Doctrine\DBAL\Connection::PARAM_STR_ARRAY;
+        }
+
+        $sql = 'SELECT DISTINCT v.value, v.lang'
+            . ' FROM value v'
+            . ' INNER JOIN resource r ON r.id = v.resource_id'
+            . ' WHERE ' . implode(' AND ', $where);
+
+        $this->logger->info(
+            'Collecting texts via SQL on table value (terms: {nbi} include / {nbe} exclude, size filter: {sf}).', // @translate
+            [
+                'nbi' => count($includeIds),
+                'nbe' => count($excludeIds),
+                'sf' => $hasSizeFilter ? 'yes' : 'no',
+            ]
+        );
+
+        $stmt = $this->connection->executeQuery($sql, $params, $types);
+
+        $textsToTranslate = [];
+        $rowCount = 0;
+        $logStep = 50000;
+        while ($row = $stmt->fetchAssociative()) {
+            if ($this->shouldStop()) {
+                break;
+            }
+            $rowCount++;
+            $val = (string) $row['value'];
+            if ($val === '' || is_numeric($val)) {
+                continue;
+            }
+            if (preg_match('~^\s*(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s*[ZM]*\s*\(~i', $val)) {
+                continue;
+            }
+            $lang = (string) ($row['lang'] ?? '');
+            $langCode = mb_strtolower((string) strtok($lang, '-'));
+            if (!$langCode && $isSkipEmptyLang) {
+                continue;
+            }
+
+            foreach ($pairs as $pair) {
+                $langSource = $pair['source'] ?: $defaultLangSource;
+                $langTarget = $pair['target'];
+                $key = ($langSource ?? '') . '=' . $langTarget;
+                $textsToTranslate[$key]['source'] = $langSource;
+                $textsToTranslate[$key]['target'] = $langTarget;
+                $textsToTranslate[$key]['texts'][$val] = $val;
+            }
+
+            if ($rowCount % $logStep === 0) {
+                $uniqueTexts = 0;
+                foreach ($textsToTranslate as $data) {
+                    $uniqueTexts += count($data['texts'] ?? []);
+                }
+                $memMb = (int) round(memory_get_usage(true) / 1048576);
+                $this->logger->info(
+                    'SQL collect: {rows} rows scanned, {unique} unique texts, {mem} MB memory.', // @translate
+                    [
+                        'rows' => $rowCount,
+                        'unique' => $uniqueTexts,
+                        'mem' => $memMb,
+                    ]
+                );
+            }
+        }
+
+        foreach ($textsToTranslate as &$data) {
+            $data['texts'] = array_values($data['texts']);
+        }
+        unset($data);
+
+        return $textsToTranslate;
+    }
+
+    /**
      * Filter texts that already have a translation, using direct SQL.
      */
     protected function filterExistingTranslationsSql(
@@ -434,13 +670,35 @@ class TranslateAll extends AbstractJob
             }
 
             if ($results) {
-                $this->api->batchCreate(
-                    'translations',
-                    $results,
-                    [],
-                    ['continueOnError' => true]
-                );
-                $totalCreated += count($results);
+                $created = 0;
+                $skipped = 0;
+                foreach ($results as $payload) {
+                    try {
+                        $this->api->create('translations', $payload);
+                        $created++;
+                    } catch (\Omeka\Api\Exception\ValidationException $e) {
+                        // Duplicate at DB collation level (e.g. apostrophe
+                        // variants collapsed by utf8mb4_unicode_ci): skip.
+                        $skipped++;
+                    } catch (\Throwable $e) {
+                        $this->logger->err(
+                            'Translation create failed: {message}', // @translate
+                            ['message' => $e->getMessage()]
+                        );
+                        $skipped++;
+                    }
+                }
+                $totalCreated += $created;
+                if ($skipped > 0) {
+                    $this->logger->info(
+                        '{source} → {target}: {skipped} duplicates skipped in chunk.', // @translate
+                        [
+                            'source' => $langSource ?: 'auto',
+                            'target' => $langTarget,
+                            'skipped' => $skipped,
+                        ]
+                    );
+                }
             }
 
             if ($totalCreated >= $nextLog) {
