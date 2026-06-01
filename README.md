@@ -1,11 +1,6 @@
 Translator (module for Omeka S)
 ===============================
 
-<a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fgitlab.com%2FDaniel-KM%2FOmeka-S-module-Translator%2F-%2Fraw%2Fmaster%2Fblueprint.json">
-  <img src="https://raw.githubusercontent.com/ateeducacion/omeka-s-playground/main/ogimage.png" alt="Try Translator in your browser" width="220">
-</a><br>
-<small><a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fgitlab.com%2FDaniel-KM%2FOmeka-S-module-Translator%2F-%2Fraw%2Fmaster%2Fblueprint.json">Try in your browser</a></small>
-
 > __New versions of this module and support for Omeka S version 3.0 and above
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__
@@ -23,6 +18,13 @@ Some features are not yet available: translation of site page blocks and storage
 of translated values in resource itself. See todo below.
 
 See the list of [supported languages by DeepL].
+
+
+
+<a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fgitlab.com%2FDaniel-KM%2FOmeka-S-module-Translator%2F-%2Fraw%2Fmaster%2Fblueprint.json">
+    This module can be tested directly in your browser<br/>
+    <img src="https://raw.githubusercontent.com/ateeducacion/omeka-s-playground/main/ogimage.png" alt="Try Translator in your browser" width="110">
+</a><br>
 
 
 Installation
@@ -61,6 +63,12 @@ Usage
 For automatic translation, an api key is needed, so you need to open an account
 at [DeepL]. The free account allows to translate 500000 characters by month,
 that is large enough in most common cases.
+
+Specify the list of target languages in the main settings. There are two way to
+indicate a target language, with or without the source language. if the source
+language is not set, it will set as the language set in the previous setting,
+else the translator service will do an autodetection, that is generally not
+recommended with short strings.
 
 
 TODO
@@ -131,7 +139,8 @@ Copyright
 
 * Copyright Daniel Berthereau, 2025 (see [Daniel-KM] on GitLab)
 
-Initially created for the digital library, the [Curiothèque] of the [Musée Curie].
+Initially created for the digital library, the [Curiothèque] of the [Musée Curie],
+completed for the [Musée de Bretagne].
 
 
 [Translator]: https://gitlab.com/Daniel-KM/Omeka-S-module-Translator
@@ -149,5 +158,6 @@ Initially created for the digital library, the [Curiothèque] of the [Musée Cur
 [OSI]: http://opensource.org
 [Curiothèque]: https://curiotheque.musee.curie.fr/
 [Musée curie]: https://musee.curie.fr
+[Musée de Bretagne]: https://collections.musee-bretagne.fr
 [GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
