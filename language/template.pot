@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-18 00:00+0000\n"
+"POT-Creation-Date: 2026-06-01 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,23 +17,179 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/scripts/upgrade.php:38 Module.php:149
+#: data/scripts/upgrade.php:38 Module.php:319
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
-#: Module.php:206
+#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:51
+msgid "Missing requirement. Unable to upgrade."
+msgstr ""
+
+#: Module.php:327
+#, php-format
+msgid "This version of module %1$s requires a version of php ≥ %2$s."
+msgstr ""
+
+#: data/scripts/upgrade.php:47
+msgid "This version of module {module} requires a version of php ≥ {version}."
+msgstr ""
+
+#: data/scripts/upgrade.php:72
+msgid "Setting \"{key}\" was split into \"{key}\" + \"{key}_size\"."
+msgstr ""
+
+#: Module.php:384
 msgid ""
 "Fill your DeepL api key, then set languages to translate in {link}main "
 "settings{link_end}."
 msgstr ""
 
-#: Module.php:878
+#: Module.php:1026
 msgid "The following source languages are not supported currently: {list}."
 msgstr ""
 
-#: Module.php:884
+#: Module.php:1032
 msgid "The following target languages are not supported currently: {list}."
+msgstr ""
+
+#: Module.php:1124 src/Job/TranslateAll.php:1001
+msgid "DeepL translation failed: {error}"
+msgstr ""
+
+#: Module.php:1164
+msgid ""
+"Translating all resources in background (job {link_job}#{job_id}{link_end}, "
+"{link_log}logs{link_end})."
+msgstr ""
+
+#: src/Job/TranslateAll.php:80
+msgid "No DeepL API key configured."
+msgstr ""
+
+#: src/Job/TranslateAll.php:88
+msgid "No language pairs configured."
+msgstr ""
+
+#: src/Job/TranslateAll.php:100
+msgid "No properties to translate configured."
+msgstr ""
+
+#: src/Job/TranslateAll.php:109
+msgid "Starting batch translation for: {types}."
+msgstr ""
+
+#: src/Job/TranslateAll.php:122
+msgid "No new texts to translate."
+msgstr ""
+
+#: src/Job/TranslateAll.php:135
+msgid ""
+"Collected {texts} unique texts ({chars} characters) across {pairs} language "
+"pair(s)."
+msgstr ""
+
+#: src/Job/TranslateAll.php:157
+msgid "Job stopped by user."
+msgstr ""
+
+#: src/Job/TranslateAll.php:180
+msgid "{count} texts to translate for {source} → {target}."
+msgstr ""
+
+#: src/Job/TranslateAll.php:200
+msgid "Batch translation completed: {count} translations created."
+msgstr ""
+
+#: src/Job/TranslateAll.php:209
+msgid "Job aborted: DeepL quota exceeded. Re-run later when quota resets."
+msgstr ""
+
+#: src/Job/TranslateAll.php:224
+msgid "--- Session summary ---"
+msgstr ""
+
+#: src/Job/TranslateAll.php:228
+msgid "{pair}: {translated} translated, {remaining} not translated."
+msgstr ""
+
+#: src/Job/TranslateAll.php:259
+msgid "--- Database totals (all sessions) ---"
+msgstr ""
+
+#: src/Job/TranslateAll.php:263
+msgid "{source} → {target}: {count} translations stored."
+msgstr ""
+
+#: src/Job/TranslateAll.php:331
+msgid "Collecting texts from {count} {type}."
+msgstr ""
+
+#: src/Job/TranslateAll.php:401
+msgid ""
+"{type}: {done}/{total} processed, {unique} unique texts collected, {mem} MB "
+"memory."
+msgstr ""
+
+#: src/Job/TranslateAll.php:499
+msgid "No resolvable properties to include."
+msgstr ""
+
+#: src/Job/TranslateAll.php:595
+msgid ""
+"Collecting texts via SQL on table value (terms: {nbi} include / {nbe} "
+"exclude, size filter: {sf})."
+msgstr ""
+
+#: src/Job/TranslateAll.php:642
+msgid ""
+"SQL collect: {rows} rows scanned, {unique} unique texts, {mem} MB memory."
+msgstr ""
+
+#: src/Job/TranslateAll.php:791
+msgid ""
+"Database {version} does not support JSON_TABLE; using byte-exact fallback. "
+"Some translated strings may be re-sent to DeepL when collation collapses "
+"(apostrophes, accents, NFC/NFD, ligatures). Per-item try/catch prevents DB "
+"duplicates but burns quota."
+msgstr ""
+
+#: src/Job/TranslateAll.php:821
+msgid "Unsupported source language: {lang}."
+msgstr ""
+
+#: src/Job/TranslateAll.php:831
+msgid "Unsupported target language: {lang}."
+msgstr ""
+
+#: src/Job/TranslateAll.php:904
+msgid "Translation create failed: {message}"
+msgstr ""
+
+#: src/Job/TranslateAll.php:913
+msgid "{source} → {target}: {skipped} duplicates skipped in chunk."
+msgstr ""
+
+#: src/Job/TranslateAll.php:925
+msgid "{source} → {target}: {done}/{total} translations created."
+msgstr ""
+
+#: src/Job/TranslateAll.php:995
+msgid "DeepL quota exceeded: {error}. Aborting job."
+msgstr ""
+
+#: src/Job/TranslateResources.php:53
+msgid "Translator: starting translation of {count} resources."
+msgstr ""
+
+#: src/Job/TranslateResources.php:78
+msgid ""
+"Translator: {done}/{total} resources processed, {created} translations "
+"queued, {mem} MB memory."
+msgstr ""
+
+#: src/Job/TranslateResources.php:128
+msgid "Translator: stored {count} translations for {resources} resources."
 msgstr ""
 
 #: src/Form/SettingsFieldset.php:14
@@ -84,12 +240,11 @@ msgstr ""
 
 #: src/Form/SettingsFieldset.php:76
 msgid ""
-"Only literal data are translated, not numeric values, resources, uri, or "
-"other data. It is recommended to remove big fields from the list of "
-"properties, in particular extracted text."
+"Explicit list of properties to translate. Combine with size filter below to "
+"include all values within a size range."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:80 src/Form/SettingsFieldset.php:110
+#: src/Form/SettingsFieldset.php:80
 msgid "Resource metadata"
 msgstr ""
 
@@ -97,36 +252,70 @@ msgstr ""
 msgid "All properties"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:83 src/Form/SettingsFieldset.php:115
-msgid "All properties less or equal to 500 characters"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:84 src/Form/SettingsFieldset.php:116
-msgid "All properties less or equal to 1000 characters"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:85 src/Form/SettingsFieldset.php:117
-msgid "All properties less or equal to 5000 characters"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:86 src/Form/SettingsFieldset.php:112
-msgid "All properties more than 500 characters"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:87 src/Form/SettingsFieldset.php:113
-msgid "All properties more than 1000 characters"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:88 src/Form/SettingsFieldset.php:114
-msgid "All properties more than 5000 characters"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:98 src/Form/SettingsFieldset.php:127
+#: src/Form/SettingsFieldset.php:92 src/Form/SettingsFieldset.php:129
 msgid "Select properties…"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:106
+#: src/Form/SettingsFieldset.php:100
+msgid "Size filter to include"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:101
+msgid ""
+"Add all property values matching this size, in addition to the explicit list "
+"above."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:103 src/Form/SettingsFieldset.php:140
+msgid "No size filter"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:104 src/Form/SettingsFieldset.php:141
+msgid "All values less or equal to 500 characters"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:105 src/Form/SettingsFieldset.php:142
+msgid "All values less or equal to 1000 characters"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:106 src/Form/SettingsFieldset.php:143
+msgid "All values less or equal to 5000 characters"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:107 src/Form/SettingsFieldset.php:144
+msgid "All values more than 500 characters"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:108 src/Form/SettingsFieldset.php:145
+msgid "All values more than 1000 characters"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:109 src/Form/SettingsFieldset.php:146
+msgid "All values more than 5000 characters"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:121
 msgid "Properties not to translate"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:137
+msgid "Size filter to exclude"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:138
+msgid ""
+"Skip all property values matching this size, in addition to the explicit "
+"exclude list above."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:159
+msgid "Lauch a job to translate all existing resources"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:160
+msgid ""
+"Launch a background job to translate all existing resources. Only new texts "
+"that have no translation yet will be sent to DeepL."
 msgstr ""
 
 #: src/Form/ConfigForm.php:17
@@ -145,7 +334,7 @@ msgstr ""
 msgid "The translation requires a translated string."
 msgstr ""
 
-#: src/Api/Adapter/TranslationAdapter.php:196
+#: src/Api/Adapter/TranslationAdapter.php:197
 msgid ""
 "The string \"{string}\", source language \"{language}\" and target language "
 "\"{language_2}\" to translate must be unique."
