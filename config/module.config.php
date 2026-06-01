@@ -51,7 +51,9 @@ return [
             'translator_lang_pairs' => [],
             'translator_lang_source_default' => '',
             'translator_properties_include' => [],
+            'translator_properties_include_size' => '',
             'translator_properties_exclude' => [],
+            'translator_properties_exclude_size' => '',
             // Not a real setting: trigger for the batch job.
             'translator_translate_resources' => false,
         ],

@@ -174,15 +174,15 @@ class Module extends AbstractModule
         $siteSettings = $services->get('Omeka\Settings\Site');
 
         $settings->set('translator_properties_include', [
-            'properties_max_500',
             'dcterms:title',
             'dcterms:description',
         ]);
+        $settings->set('translator_properties_include_size', 'properties_max_500');
         $settings->set('translator_properties_exclude', [
-            'properties_min_500',
             'bibo:content',
             'extracttext:extracted_text',
         ]);
+        $settings->set('translator_properties_exclude_size', 'properties_min_500');
 
         $mainLocale = $settings->get('locale') ?: $services->get('Config')['translator']['locale'] ?: 'en_US';
         if (!$mainLocale) {
@@ -676,6 +676,10 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
 
         $propertiesToInclude = $settings->get('translator_properties_include', []);
+        $sizeInclude = $settings->get('translator_properties_include_size', '');
+        if ($sizeInclude) {
+            $propertiesToInclude[] = $sizeInclude;
+        }
         if (!$propertiesToInclude) {
             return [];
         }
@@ -696,6 +700,10 @@ class Module extends AbstractModule
         }
 
         $propertiesToExclude = $settings->get('translator_properties_exclude', []);
+        $sizeExclude = $settings->get('translator_properties_exclude_size', '');
+        if ($sizeExclude) {
+            $propertiesToExclude[] = $sizeExclude;
+        }
 
         $propertySizesMax = [
             'properties_max_500' => 500,
@@ -1180,7 +1188,15 @@ class Module extends AbstractModule
             }
 
             $propertiesToExclude = $settings->get('translator_properties_exclude', []);
+            $sizeExclude = $settings->get('translator_properties_exclude_size', '');
+            if ($sizeExclude) {
+                $propertiesToExclude[] = $sizeExclude;
+            }
             $propertiesToInclude = $settings->get('translator_properties_include', []);
+            $sizeInclude = $settings->get('translator_properties_include_size', '');
+            if ($sizeInclude) {
+                $propertiesToInclude[] = $sizeInclude;
+            }
 
             // Here, the list of specific keys are just used to be removed.
             $propertySizesMax = [

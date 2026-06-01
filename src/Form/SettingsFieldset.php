@@ -73,19 +73,13 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'internationalisation_resources',
                     'label' => 'Properties to translate', // @translate
-                    'info' => 'Only literal data are translated, not numeric values, resources, uri, or other data. It is recommended to remove big fields from the list of properties, in particular extracted text.', // @translate
-                    'empty_option' => 'All', // @translate
+                    'info' => 'Explicit list of properties to translate. Combine with size filter below to include all values within a size range.', // @translate
+                    'empty_option' => '',
                     'prepend_value_options' => [
                         'metadata' => [
                             'label' => 'Resource metadata', // @translate
                             'options' => [
                                 'properties' => 'All properties', // @translate
-                                'properties_max_500' => 'All properties less or equal to 500 characters', // @translate
-                                'properties_max_1000' => 'All properties less or equal to 1000 characters', // @translate
-                                'properties_max_5000' => 'All properties less or equal to 5000 characters', // @translate
-                                'properties_min_500' => 'All properties more than 500 characters', // @translate
-                                'properties_min_1000' => 'All properties more than 1000 characters', // @translate
-                                'properties_min_5000' => 'All properties more than 5000 characters', // @translate
                             ],
                         ],
                     ],
@@ -99,25 +93,33 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'translator_properties_include_size',
+                'type' => CommonElement\OptionalSelect::class,
+                'options' => [
+                    'element_group' => 'internationalisation_resources',
+                    'label' => 'Size filter to include', // @translate
+                    'info' => 'Add all property values matching this size, in addition to the explicit list above.', // @translate
+                    'value_options' => [
+                        '' => 'No size filter', // @translate
+                        'properties_max_500' => 'All values less or equal to 500 characters', // @translate
+                        'properties_max_1000' => 'All values less or equal to 1000 characters', // @translate
+                        'properties_max_5000' => 'All values less or equal to 5000 characters', // @translate
+                        'properties_min_500' => 'All values more than 500 characters', // @translate
+                        'properties_min_1000' => 'All values more than 1000 characters', // @translate
+                        'properties_min_5000' => 'All values more than 5000 characters', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'translator_properties_include_size',
+                ],
+            ])
+            ->add([
                 'name' => 'translator_properties_exclude',
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'element_group' => 'internationalisation_resources',
                     'label' => 'Properties not to translate', // @translate
                     'empty_option' => '',
-                    'prepend_value_options' => [
-                        'metadata' => [
-                            'label' => 'Resource metadata', // @translate
-                            'options' => [
-                                'properties_min_500' => 'All properties more than 500 characters', // @translate
-                                'properties_min_1000' => 'All properties more than 1000 characters', // @translate
-                                'properties_min_5000' => 'All properties more than 5000 characters', // @translate
-                                'properties_max_500' => 'All properties less or equal to 500 characters', // @translate
-                                'properties_max_1000' => 'All properties less or equal to 1000 characters', // @translate
-                                'properties_max_5000' => 'All properties less or equal to 5000 characters', // @translate
-                            ],
-                        ],
-                    ],
                     'term_as_value' => true,
                 ],
                 'attributes' => [
@@ -125,6 +127,27 @@ class SettingsFieldset extends Fieldset
                     'class' => 'chosen-select',
                     'multiple' => true,
                     'data-placeholder' => 'Select properties…', // @translate
+                ],
+            ])
+            ->add([
+                'name' => 'translator_properties_exclude_size',
+                'type' => CommonElement\OptionalSelect::class,
+                'options' => [
+                    'element_group' => 'internationalisation_resources',
+                    'label' => 'Size filter to exclude', // @translate
+                    'info' => 'Skip all property values matching this size, in addition to the explicit exclude list above.', // @translate
+                    'value_options' => [
+                        '' => 'No size filter', // @translate
+                        'properties_max_500' => 'All values less or equal to 500 characters', // @translate
+                        'properties_max_1000' => 'All values less or equal to 1000 characters', // @translate
+                        'properties_max_5000' => 'All values less or equal to 5000 characters', // @translate
+                        'properties_min_500' => 'All values more than 500 characters', // @translate
+                        'properties_min_1000' => 'All values more than 1000 characters', // @translate
+                        'properties_min_5000' => 'All values more than 5000 characters', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'translator_properties_exclude_size',
                 ],
             ])
 

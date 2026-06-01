@@ -26,7 +26,8 @@ class TranslateResources extends AbstractJob
             return;
         }
         $propertiesToInclude = $settings->get('translator_properties_include', []);
-        if (!$propertiesToInclude) {
+        $sizeInclude = $settings->get('translator_properties_include_size', '');
+        if (!$propertiesToInclude && !$sizeInclude) {
             return;
         }
 

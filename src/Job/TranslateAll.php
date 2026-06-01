@@ -91,6 +91,10 @@ class TranslateAll extends AbstractJob
         }
 
         $propertiesToInclude = $this->settings->get('translator_properties_include', []);
+        $sizeInclude = $this->settings->get('translator_properties_include_size', '');
+        if ($sizeInclude) {
+            $propertiesToInclude[] = $sizeInclude;
+        }
         if (!$propertiesToInclude) {
             $this->logger->err(
                 'No properties to translate configured.' // @translate
@@ -292,6 +296,10 @@ class TranslateAll extends AbstractJob
             $propertiesToInclude = $easyMeta->propertyTerms();
         }
         $propertiesToExclude = $this->settings->get('translator_properties_exclude', []);
+        $sizeExclude = $this->settings->get('translator_properties_exclude_size', '');
+        if ($sizeExclude) {
+            $propertiesToExclude[] = $sizeExclude;
+        }
 
         $propertySizes = [
             'properties_max_500' => 500,
