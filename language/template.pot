@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-01 00:00+0000\n"
+"POT-Creation-Date: 2026-08-31 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,136 +17,152 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/scripts/upgrade.php:38 Module.php:319
+#: data/scripts/upgrade.php:38 data/scripts/upgrade.php:49 Module.php:345
+#: Module.php:355
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
-#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:51
+#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:53
+#: data/scripts/upgrade.php:62
 msgid "Missing requirement. Unable to upgrade."
 msgstr ""
 
-#: Module.php:327
+#: Module.php:337
 #, php-format
 msgid "This version of module %1$s requires a version of php ≥ %2$s."
 msgstr ""
 
-#: data/scripts/upgrade.php:47
+#: data/scripts/upgrade.php:58
 msgid "This version of module {module} requires a version of php ≥ {version}."
 msgstr ""
 
-#: data/scripts/upgrade.php:72
+#: data/scripts/upgrade.php:83
 msgid "Setting \"{key}\" was split into \"{key}\" + \"{key}_size\"."
 msgstr ""
 
-#: Module.php:384
+#: data/scripts/upgrade.php:101
+msgid ""
+"The keys of the page blocks to translate were set with the default ones. "
+"Check them in the main settings."
+msgstr ""
+
+#: data/scripts/upgrade.php:145
+msgid ""
+"The foreign key \"{name}\" of the table \"translate_page\" could not be "
+"created: {message}"
+msgstr ""
+
+#: data/scripts/upgrade.php:154
+msgid "It is now possible to translate site pages individually."
+msgstr ""
+
+#: Module.php:417
 msgid ""
 "Fill your DeepL api key, then set languages to translate in {link}main "
 "settings{link_end}."
 msgstr ""
 
-#: Module.php:1026
+#: Module.php:1147 src/Job/AbstractTranslate.php:552
 msgid "The following source languages are not supported currently: {list}."
 msgstr ""
 
-#: Module.php:1032
+#: Module.php:1153 src/Job/AbstractTranslate.php:558
 msgid "The following target languages are not supported currently: {list}."
 msgstr ""
 
-#: Module.php:1124 src/Job/TranslateAll.php:1001
+#: Module.php:1245 src/Job/AbstractTranslate.php:726
 msgid "DeepL translation failed: {error}"
 msgstr ""
 
-#: Module.php:1164
+#: Module.php:1283
 msgid ""
 "Translating all resources in background (job {link_job}#{job_id}{link_end}, "
 "{link_log}logs{link_end})."
 msgstr ""
 
-#: src/Job/TranslateAll.php:80
-msgid "No DeepL API key configured."
+#: Module.php:1309
+msgid ""
+"Translating the copied pages of the site groups in background (job {link_job}"
+"#{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 
-#: src/Job/TranslateAll.php:88
+#: src/Job/TranslateAll.php:35
 msgid "No language pairs configured."
 msgstr ""
 
-#: src/Job/TranslateAll.php:100
+#: src/Job/TranslateAll.php:47
 msgid "No properties to translate configured."
 msgstr ""
 
-#: src/Job/TranslateAll.php:109
+#: src/Job/TranslateAll.php:56
 msgid "Starting batch translation for: {types}."
 msgstr ""
 
-#: src/Job/TranslateAll.php:122
+#: src/Job/TranslateAll.php:69
 msgid "No new texts to translate."
 msgstr ""
 
-#: src/Job/TranslateAll.php:135
-msgid ""
-"Collected {texts} unique texts ({chars} characters) across {pairs} language "
-"pair(s)."
-msgstr ""
-
-#: src/Job/TranslateAll.php:157
-msgid "Job stopped by user."
-msgstr ""
-
-#: src/Job/TranslateAll.php:180
-msgid "{count} texts to translate for {source} → {target}."
-msgstr ""
-
-#: src/Job/TranslateAll.php:200
-msgid "Batch translation completed: {count} translations created."
-msgstr ""
-
-#: src/Job/TranslateAll.php:209
-msgid "Job aborted: DeepL quota exceeded. Re-run later when quota resets."
-msgstr ""
-
-#: src/Job/TranslateAll.php:224
-msgid "--- Session summary ---"
-msgstr ""
-
-#: src/Job/TranslateAll.php:228
-msgid "{pair}: {translated} translated, {remaining} not translated."
-msgstr ""
-
-#: src/Job/TranslateAll.php:259
-msgid "--- Database totals (all sessions) ---"
-msgstr ""
-
-#: src/Job/TranslateAll.php:263
-msgid "{source} → {target}: {count} translations stored."
-msgstr ""
-
-#: src/Job/TranslateAll.php:331
+#: src/Job/TranslateAll.php:139
 msgid "Collecting texts from {count} {type}."
 msgstr ""
 
-#: src/Job/TranslateAll.php:401
+#: src/Job/TranslateAll.php:209
 msgid ""
 "{type}: {done}/{total} processed, {unique} unique texts collected, {mem} MB "
 "memory."
 msgstr ""
 
-#: src/Job/TranslateAll.php:499
+#: src/Job/TranslateAll.php:307
 msgid "No resolvable properties to include."
 msgstr ""
 
-#: src/Job/TranslateAll.php:595
+#: src/Job/TranslateAll.php:414
 msgid ""
 "Collecting texts via SQL on table value (terms: {nbi} include / {nbe} "
 "exclude, size filter: {sf})."
 msgstr ""
 
-#: src/Job/TranslateAll.php:642
+#: src/Job/TranslateAll.php:461
 msgid ""
 "SQL collect: {rows} rows scanned, {unique} unique texts, {mem} MB memory."
 msgstr ""
 
-#: src/Job/TranslateAll.php:791
+#: src/Job/AbstractTranslate.php:87
+msgid "No DeepL API key configured."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:106
+msgid ""
+"Collected {texts} unique texts ({chars} characters) across {pairs} language "
+"pair(s)."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:136
+msgid "Job stopped by user."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:159
+msgid "{count} texts to translate for {source} → {target}."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:180
+msgid "Batch translation completed: {count} translations created."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:189 src/Job/TranslatePages.php:199
+msgid "Job aborted: DeepL quota exceeded. Re-run later when quota resets."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:214
+msgid "Session summary, translated by pair of languages: {list}."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:250
+msgid "Translations stored in the database, all sessions included: {list}."
+msgstr ""
+
+#: src/Job/AbstractTranslate.php:500
 msgid ""
 "Database {version} does not support JSON_TABLE; using byte-exact fallback. "
 "Some translated strings may be re-sent to DeepL when collation collapses "
@@ -154,28 +170,123 @@ msgid ""
 "duplicates but burns quota."
 msgstr ""
 
-#: src/Job/TranslateAll.php:821
-msgid "Unsupported source language: {lang}."
-msgstr ""
-
-#: src/Job/TranslateAll.php:831
-msgid "Unsupported target language: {lang}."
-msgstr ""
-
-#: src/Job/TranslateAll.php:904
+#: src/Job/AbstractTranslate.php:625
 msgid "Translation create failed: {message}"
 msgstr ""
 
-#: src/Job/TranslateAll.php:913
+#: src/Job/AbstractTranslate.php:634
 msgid "{source} → {target}: {skipped} duplicates skipped in chunk."
 msgstr ""
 
-#: src/Job/TranslateAll.php:925
+#: src/Job/AbstractTranslate.php:646
 msgid "{source} → {target}: {done}/{total} translations created."
 msgstr ""
 
-#: src/Job/TranslateAll.php:995
+#: src/Job/AbstractTranslate.php:720
 msgid "DeepL quota exceeded: {error}. Aborting job."
+msgstr ""
+
+#: src/Job/TranslatePages.php:128
+msgid "No keys of page blocks to translate configured."
+msgstr ""
+
+#: src/Job/TranslatePages.php:159
+msgid ""
+"No pair of languages with an explicit source language is configured, so the "
+"direction of the translation of the pages is unknown."
+msgstr ""
+
+#: src/Job/TranslatePages.php:166
+msgid ""
+"The module Internationalisation is required to translate the pages: it "
+"manages the site groups and the relations between the copied pages."
+msgstr ""
+
+#: src/Job/TranslatePages.php:174
+msgid ""
+"No multilingual site group is configured in the module Internationalisation."
+msgstr ""
+
+#: src/Job/TranslatePages.php:180
+msgid "Starting translation of the pages of {count} site groups."
+msgstr ""
+
+#: src/Job/TranslatePages.php:219
+msgid "No page to translate in place."
+msgstr ""
+
+#: src/Job/TranslatePages.php:233
+msgid "The source language \"{lang}\" is not supported."
+msgstr ""
+
+#: src/Job/TranslatePages.php:240
+msgid "Starting translation of {count} pages in place, from {source}."
+msgstr ""
+
+#: src/Job/TranslatePages.php:262
+msgid ""
+"Page #{page_id}: the locale of its site is not supported as a target "
+"language, so it is skipped."
+msgstr ""
+
+#: src/Job/TranslatePages.php:273
+msgid ""
+"Page #{page_id}: the source language is the language of its site, so it is "
+"skipped."
+msgstr ""
+
+#: src/Job/TranslatePages.php:543
+msgid ""
+"Page #{page_id}: there is no block at position {position} to translate from "
+"page #{source_page_id}."
+msgstr ""
+
+#: src/Job/TranslatePages.php:550
+msgid ""
+"Page #{page_id}: the block at position {position} is a \"{layout}\", but the "
+"original one is a \"{layout_2}\", so it is skipped."
+msgstr ""
+
+#: src/Job/TranslatePages.php:597
+msgid "translated"
+msgstr ""
+
+#: src/Job/TranslatePages.php:598
+msgid "retranslated"
+msgstr ""
+
+#: src/Job/TranslatePages.php:599
+msgid "partly translated"
+msgstr ""
+
+#: src/Job/TranslatePages.php:600
+msgid "unchanged"
+msgstr ""
+
+#: src/Job/TranslatePages.php:601
+msgid "mirror pages skipped"
+msgstr ""
+
+#: src/Job/TranslatePages.php:602
+msgid "failed"
+msgstr ""
+
+#: src/Job/TranslatePages.php:616
+msgid "No page was translated."
+msgstr ""
+
+#: src/Job/TranslatePages.php:622
+msgid "Pages: {list}. {blocks} blocks updated."
+msgstr ""
+
+#: src/Job/TranslatePages.php:633
+msgid "These pages were not fully translated: #{list}."
+msgstr ""
+
+#: src/Job/TranslatePages.php:950
+msgid ""
+"The full text of the page #{page_id} was not saved. Run the indexation of "
+"the full text manually. Exception: {exception}"
 msgstr ""
 
 #: src/Job/TranslateResources.php:53
@@ -200,33 +311,37 @@ msgstr ""
 msgid "Internationalisation: resources"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:31
-msgid "Default language for values without any one"
+#: src/Form/SettingsFieldset.php:18
+msgid "Internationalisation: site pages"
 msgstr ""
 
 #: src/Form/SettingsFieldset.php:32
+msgid "Default language for values without any one"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:33
 msgid ""
 "The language should be a 2-letter iso code (ISO 3166-1) supported by the "
 "translation service."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:35
+#: src/Form/SettingsFieldset.php:36
 msgid "Automatic"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:36
+#: src/Form/SettingsFieldset.php:37
 msgid "Skip"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:43
+#: src/Form/SettingsFieldset.php:44
 msgid "Select language…"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:51
+#: src/Form/SettingsFieldset.php:52
 msgid "Target languages or pairs of languages to translate"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:52
+#: src/Form/SettingsFieldset.php:53
 msgid ""
 "The source language will be automatically defined when not set. For pairs, "
 "separate source and target with a \"=\", one by line. The source language "
@@ -234,88 +349,122 @@ msgid ""
 "service. The target language may have the localization code if supported."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:75
+#: src/Form/SettingsFieldset.php:76
 msgid "Properties to translate"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:76
+#: src/Form/SettingsFieldset.php:77
 msgid ""
 "Explicit list of properties to translate. Combine with size filter below to "
 "include all values within a size range."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:80
+#: src/Form/SettingsFieldset.php:81
 msgid "Resource metadata"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:82
+#: src/Form/SettingsFieldset.php:83
 msgid "All properties"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:92 src/Form/SettingsFieldset.php:129
+#: src/Form/SettingsFieldset.php:93 src/Form/SettingsFieldset.php:130
 msgid "Select properties…"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:100
+#: src/Form/SettingsFieldset.php:101
 msgid "Size filter to include"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:101
+#: src/Form/SettingsFieldset.php:102
 msgid ""
 "Add all property values matching this size, in addition to the explicit list "
 "above."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:103 src/Form/SettingsFieldset.php:140
+#: src/Form/SettingsFieldset.php:104 src/Form/SettingsFieldset.php:141
 msgid "No size filter"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:104 src/Form/SettingsFieldset.php:141
+#: src/Form/SettingsFieldset.php:105 src/Form/SettingsFieldset.php:142
 msgid "All values less or equal to 500 characters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:105 src/Form/SettingsFieldset.php:142
+#: src/Form/SettingsFieldset.php:106 src/Form/SettingsFieldset.php:143
 msgid "All values less or equal to 1000 characters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:106 src/Form/SettingsFieldset.php:143
+#: src/Form/SettingsFieldset.php:107 src/Form/SettingsFieldset.php:144
 msgid "All values less or equal to 5000 characters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:107 src/Form/SettingsFieldset.php:144
+#: src/Form/SettingsFieldset.php:108 src/Form/SettingsFieldset.php:145
 msgid "All values more than 500 characters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:108 src/Form/SettingsFieldset.php:145
+#: src/Form/SettingsFieldset.php:109 src/Form/SettingsFieldset.php:146
 msgid "All values more than 1000 characters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:109 src/Form/SettingsFieldset.php:146
+#: src/Form/SettingsFieldset.php:110 src/Form/SettingsFieldset.php:147
 msgid "All values more than 5000 characters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:121
+#: src/Form/SettingsFieldset.php:122
 msgid "Properties not to translate"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:137
+#: src/Form/SettingsFieldset.php:138
 msgid "Size filter to exclude"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:138
+#: src/Form/SettingsFieldset.php:139
 msgid ""
 "Skip all property values matching this size, in addition to the explicit "
 "exclude list above."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:159
+#: src/Form/SettingsFieldset.php:160
 msgid "Lauch a job to translate all existing resources"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:160
+#: src/Form/SettingsFieldset.php:161
 msgid ""
 "Launch a background job to translate all existing resources. Only new texts "
 "that have no translation yet will be sent to DeepL."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:175
+msgid "Keys of the page blocks to translate"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:176
+msgid ""
+"The data of a block is a free json, so the keys that contain a text to "
+"translate should be listed here, one by line. They are searched recursively, "
+"so the attachments and the grouped blocks are managed. Use \"page_title\" to "
+"translate the title of the pages."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:191
+msgid "Layouts of the page blocks not to translate"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:192
+msgid ""
+"List of the layouts of the blocks to skip, one by line, for example \"html\" "
+"or \"browsePreview\". The mirror pages are always skipped."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:206
+msgid "Launch a job to translate the copied pages of the site groups"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:207
+msgid ""
+"The pages copied inside a multilingual site group are translated in place, "
+"following the pairs of languages above: only the pairs with an explicit "
+"source language are used. A block is translated again only when the original "
+"text changed, so the corrections are kept. The mirror pages are skipped."
 msgstr ""
 
 #: src/Form/ConfigForm.php:17
