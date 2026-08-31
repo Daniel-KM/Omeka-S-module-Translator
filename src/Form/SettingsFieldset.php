@@ -15,6 +15,7 @@ class SettingsFieldset extends Fieldset
 
     protected $elementGroups = [
         'internationalisation_resources' => 'Internationalisation: resources', // @translate
+        'internationalisation_pages' => 'Internationalisation: site pages', // @translate
     ];
 
     public function init(): void
@@ -162,6 +163,52 @@ class SettingsFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'translator_translate_resources',
+                    'value' => 0,
+                ],
+            ])
+
+            ->add([
+                'name' => 'translator_pages_include',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'element_group' => 'internationalisation_pages',
+                    'label' => 'Keys of the page blocks to translate', // @translate
+                    'info' => 'The data of a block is a free json, so the keys that contain a text to translate should be listed here, one by line. They are searched recursively, so the attachments and the grouped blocks are managed. Use "page_title" to translate the title of the pages.', // @translate
+                    'as_key_value' => false,
+                ],
+                'attributes' => [
+                    'id' => 'translator_pages_include',
+                    'required' => false,
+                    'rows' => 5,
+                    'placeholder' => implode("\n", \Translator\Stdlib\PageTexts::KEYS_DEFAULT),
+                ],
+            ])
+            ->add([
+                'name' => 'translator_pages_exclude',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'element_group' => 'internationalisation_pages',
+                    'label' => 'Layouts of the page blocks not to translate', // @translate
+                    'info' => 'List of the layouts of the blocks to skip, one by line, for example "html" or "browsePreview". The mirror pages are always skipped.', // @translate
+                    'as_key_value' => false,
+                ],
+                'attributes' => [
+                    'id' => 'translator_pages_exclude',
+                    'required' => false,
+                    'rows' => 3,
+                ],
+            ])
+            ->add([
+                'name' => 'translator_translate_pages',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'element_group' => 'internationalisation_pages',
+                    'label' => 'Launch a job to translate the copied pages of the site groups', // @translate
+                    'info' => 'The pages copied inside a multilingual site group are translated in place, following the pairs of languages above: only the pairs with an explicit source language are used. A block is translated again only when the original text changed, so the corrections are kept. The mirror pages are skipped.', // @translate
+                    'use_hidden_element' => false,
+                ],
+                'attributes' => [
+                    'id' => 'translator_translate_pages',
                     'value' => 0,
                 ],
             ])

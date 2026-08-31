@@ -54,8 +54,13 @@ return [
             'translator_properties_include_size' => '',
             'translator_properties_exclude' => [],
             'translator_properties_exclude_size' => '',
-            // Not a real setting: trigger for the batch job.
+            // Keys of the data of the page blocks to translate, and layouts of
+            // the blocks to skip.
+            'translator_pages_include' => [],
+            'translator_pages_exclude' => [],
+            // Not real settings: triggers for the batch jobs.
             'translator_translate_resources' => false,
+            'translator_translate_pages' => false,
         ],
         'site_settings' => [
             // Hidden site settings, adapted to site locale.

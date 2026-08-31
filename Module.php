@@ -526,6 +526,13 @@ class Module extends AbstractModule
             );
         }
 
+        // Translate the copies of a page of a site group after it is saved.
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\SitePageAdapter::class,
+            'api.update.post',
+            [$this, 'handleSavePagePost']
+        );
+
         // Update the quick settings when needed.
         $sharedEventManager->attach(
             \Omeka\Form\SettingForm::class,
@@ -793,6 +800,43 @@ class Module extends AbstractModule
             \Translator\Job\TranslateResources::class,
             'translator_resources',
             ['refs' => $resourceName . ':' . $id]
+        );
+    }
+
+    /**
+     * Translate the copies of a page of a site group after it is saved.
+     *
+     * The job checks if the page is an original one inside a multilingual site
+     * group: a copy is never translated back into the original.
+     */
+    public function handleSavePagePost(Event $event): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        // Quick checks: avoid further processing when the module is not
+        // configured to translate the pages.
+        if (!$settings->get('translator_deepl_api_key')
+            || !$settings->get('translator_pages_include', [])
+            || !$settings->get('internationalisation_site_groups', [])
+        ) {
+            return;
+        }
+
+        $page = $event->getParam('response')->getContent();
+        $id = $page->getId();
+        if (!$id) {
+            return;
+        }
+
+        // Defer translation to a background job. Multiple saves in the same
+        // request are collapsed into a single job dispatched at shutdown.
+        /** @var \Common\Stdlib\DeferredJobDispatch $deferred */
+        $deferred = $services->get('Common\DeferredJobDispatch');
+        $deferred->defer(
+            \Translator\Job\TranslatePages::class,
+            'translator_pages',
+            ['page_ids' => $id]
         );
     }
 
@@ -1165,6 +1209,7 @@ class Module extends AbstractModule
         $this->handleAnySettings($event, 'settings');
         $this->prepareLangsBySite();
         $this->dispatchTranslateResourcesIfRequested();
+        $this->dispatchTranslatePagesIfRequested();
     }
 
     /**
@@ -1183,17 +1228,53 @@ class Module extends AbstractModule
             return;
         }
 
-        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $dispatcher->dispatch(
+        $job = $services->get(\Omeka\Job\Dispatcher::class)->dispatch(
             \Translator\Job\TranslateAll::class,
             ['resource_types' => ['items', 'item_sets', 'media']]
         );
 
-        $plugins = $services->get('ControllerPluginManager');
+        $this->messageJobDispatched(
+            $job,
+            'Translating all resources in background (job {link_job}#{job_id}{link_end}, {link_log}logs{link_end}).' // @translate
+        );
+    }
+
+    /**
+     * Dispatch the TranslatePages job if requested via settings form.
+     */
+    protected function dispatchTranslatePagesIfRequested(): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $translatePages = (bool) $settings->get('translator_translate_pages');
+        // Always reset the flag.
+        $settings->delete('translator_translate_pages');
+
+        if (!$translatePages) {
+            return;
+        }
+
+        $job = $services->get(\Omeka\Job\Dispatcher::class)->dispatch(
+            \Translator\Job\TranslatePages::class
+        );
+
+        $this->messageJobDispatched(
+            $job,
+            'Translating the copied pages of the site groups in background (job {link_job}#{job_id}{link_end}, {link_log}logs{link_end}).' // @translate
+        );
+    }
+
+    /**
+     * Display a message with the links to a dispatched job and to its logs.
+     */
+    protected function messageJobDispatched(\Omeka\Entity\Job $job, string $message): void
+    {
+        $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
         $messenger = $plugins->get('messenger');
         $url = $plugins->get('url');
         $message = new PsrMessage(
-            'Translating all resources in background (job {link_job}#{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+            $message,
             [
                 'link_job' => sprintf('<a href="%s">', htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                 'job_id' => $job->getId(),
