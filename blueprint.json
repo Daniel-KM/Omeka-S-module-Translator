@@ -7,7 +7,7 @@
   },
   "preferredVersions": {
     "php": "8.3",
-    "omeka": "4.2.0"
+    "omeka": "4.2.1"
   },
   "debug": {
     "enabled": true
@@ -44,7 +44,7 @@
       "state": "activate",
       "source": {
         "type": "url",
-        "url": "https://github.com/Daniel-KM/Omeka-S-module-Common/releases/download/3.4.86/Common-3.4.86.zip"
+        "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-Common/-/releases/3.4.91/downloads/Common-3.4.91.zip"
       }
     },
     {
@@ -52,7 +52,7 @@
       "state": "activate",
       "source": {
         "type": "url",
-        "url": "https://github.com/Daniel-KM/Omeka-S-module-Translator/releases/download/3.4.3/Translator-3.4.3.zip"
+        "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-Translator/-/releases/3.4.5/downloads/Translator-3.4.5.zip"
       }
     }
   ],
