@@ -354,6 +354,9 @@ class Module extends AbstractModule
         ]);
         $settings->set('translator_properties_exclude_size', 'properties_min_500');
 
+        // Without these keys, the pages of the site groups are not translated.
+        $settings->set('translator_pages_include', \Translator\Stdlib\PageTexts::KEYS_DEFAULT);
+
         $mainLocale = $settings->get('locale') ?: $services->get('Config')['translator']['locale'] ?: 'en_US';
         if (!$mainLocale) {
             return;
@@ -526,7 +529,16 @@ class Module extends AbstractModule
             );
         }
 
-        // Translate the copies of a page of a site group after it is saved.
+        // Translate the copies of a page of a site group after it is saved. The
+        // creation is managed too, so a page added to the original site is
+        // translated without waiting for a second save. The job never creates a
+        // page and updates the copies with a direct sql, so a copy created by
+        // the module Internationalisation cannot trigger a loop.
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\SitePageAdapter::class,
+            'api.create.post',
+            [$this, 'handleSavePagePost']
+        );
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\SitePageAdapter::class,
             'api.update.post',
@@ -804,10 +816,13 @@ class Module extends AbstractModule
     }
 
     /**
-     * Translate the copies of a page of a site group after it is saved.
+     * Translate the copies of a page of a site group after it is created or
+     * updated.
      *
      * The job checks if the page is an original one inside a multilingual site
-     * group: a copy is never translated back into the original.
+     * group: a copy is never translated back into the original. So a page that
+     * is created as a copy in a target site only dispatches a job that has
+     * nothing to do.
      */
     public function handleSavePagePost(Event $event): void
     {

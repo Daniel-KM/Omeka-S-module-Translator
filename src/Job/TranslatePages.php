@@ -52,6 +52,20 @@ class TranslatePages extends AbstractTranslate
     const KEY_TITLE = 'title';
 
     /**
+     * Translate the copies of a page, related inside a site group.
+     *
+     * @var string
+     */
+    const MODE_RELATED = 'related';
+
+    /**
+     * Translate a page in place, into the locale of its own site.
+     *
+     * @var string
+     */
+    const MODE_SELF = 'self';
+
+    /**
      * @var \Translator\Stdlib\PageTexts
      */
     protected $pageTexts;
@@ -80,6 +94,23 @@ class TranslatePages extends AbstractTranslate
      */
     protected $countBlocks = 0;
 
+    /**
+     * Ids of the sites to translate into, or an empty array for all of them.
+     *
+     * @var array
+     */
+    protected $siteIdsFilter = [];
+
+    /**
+     * Result of the translation of each page, by page id.
+     *
+     * One of "translated", "retranslated", "unchanged", "partial", "mirror" or
+     * "failed".
+     *
+     * @var array
+     */
+    protected $pageResults = [];
+
     public function perform(): void
     {
         $this->initServices('translator/translate-pages');
@@ -88,28 +119,36 @@ class TranslatePages extends AbstractTranslate
             return;
         }
 
-        $pairs = $this->normalizeLanguagePairs();
-        $pairs = array_values(array_filter($pairs, fn ($pair) => $pair['source'] !== null));
-        if (!$pairs) {
-            $this->logger->err(
-                'No pair of languages with an explicit source language is configured, so the direction of the translation of the pages is unknown.' // @translate
-            );
-            return;
-        }
-
         $this->pageTexts = new PageTexts(
             $this->settings->get('translator_pages_include', []),
             $this->settings->get('translator_pages_exclude', [])
         );
         if (!$this->pageTexts->hasKeys()) {
-            $this->logger->err(
+            $this->logger->notice(
                 'No keys of page blocks to translate configured.' // @translate
             );
             return;
         }
 
+        // The mode "self" translates the pages in place, into the locale of
+        // their own site, without any relation nor site group: it is used for a
+        // page that is not a copy, or that was never translated.
+        if ($this->getArg('mode') === self::MODE_SELF) {
+            $this->translatePagesInPlace($this->normalizePageIds());
+            return;
+        }
+
+        $pairs = $this->normalizeLanguagePairs();
+        $pairs = array_values(array_filter($pairs, fn ($pair) => $pair['source'] !== null));
+        if (!$pairs) {
+            $this->logger->notice(
+                'No pair of languages with an explicit source language is configured, so the direction of the translation of the pages is unknown.' // @translate
+            );
+            return;
+        }
+
         if (!$this->isInternationalisationActive()) {
-            $this->logger->err(
+            $this->logger->warn(
                 'The module Internationalisation is required to translate the pages: it manages the site groups and the relations between the copied pages.' // @translate
             );
             return;
@@ -117,13 +156,14 @@ class TranslatePages extends AbstractTranslate
 
         $siteGroups = $this->siteGroups();
         if (!$siteGroups) {
-            $this->logger->err(
+            $this->logger->notice(
                 'No multilingual site group is configured in the module Internationalisation.' // @translate
             );
             return;
         }
 
         $pageIds = $this->normalizePageIds();
+        $this->siteIdsFilter = $this->normalizeSiteIds();
 
         $this->logger->notice(
             'Starting translation of the pages of {count} site groups.', // @translate
@@ -141,18 +181,137 @@ class TranslatePages extends AbstractTranslate
 
         $this->indexPages();
 
-        $this->logger->notice(
-            'Translation of the pages completed: {pages} pages and {blocks} blocks updated.', // @translate
-            ['pages' => $this->countPages, 'blocks' => $this->countBlocks]
-        );
-
-        $this->logDatabaseTotals();
+        $this->logPageResults();
 
         if ($this->quotaExceeded) {
             $this->logger->warn(
                 'Job aborted: DeepL quota exceeded. Re-run later when quota resets.' // @translate
             );
         }
+    }
+
+    /**
+     * Translate pages in place, into the locale of their own site.
+     *
+     * The source language is not set, so it is detected by the translation
+     * service: the page may be a copy that was never translated, or a page
+     * written in another language than the one of its site.
+     *
+     * Unlike the translation of the copies, there is no relation to follow and
+     * no site group to define, but the locale of the site must be a language
+     * supported as a target.
+     */
+    protected function translatePagesInPlace(array $pageIds): void
+    {
+        if (!$pageIds) {
+            $this->logger->warn(
+                'No page to translate in place.' // @translate
+            );
+            return;
+        }
+
+        // Without an explicit source language, it is detected by the service.
+        // The detection is not reliable with short strings, so the language of
+        // a site may be selected instead.
+        $langSource = (string) $this->getArg('lang_source');
+        $langSource = $langSource === '' || $langSource === 'auto'
+            ? null
+            : Module::normalizeLangCode($langSource);
+        if ($langSource !== null && !isset(Module::$langsSupportedInput[$langSource])) {
+            $this->logger->warn(
+                'The source language "{lang}" is not supported.', // @translate
+                ['lang' => $langSource]
+            );
+            return;
+        }
+
+        $this->logger->notice(
+            'Starting translation of {count} pages in place, from {source}.', // @translate
+            ['count' => count($pageIds), 'source' => $langSource ?: 'auto']
+        );
+
+        $mirrorPages = $this->mirrorPages($pageIds);
+
+        foreach ($pageIds as $pageId) {
+            if ($this->shouldStop() || $this->quotaExceeded) {
+                break;
+            }
+            if (isset($mirrorPages[$pageId])) {
+                continue;
+            }
+
+            $page = $this->pageWithSite($pageId);
+            if (!$page) {
+                continue;
+            }
+
+            $langTarget = $this->langTargetOfSite((int) $page['site_id']);
+            if (!$langTarget) {
+                $this->logger->warn(
+                    'Page #{page_id}: the locale of its site is not supported as a target language, so it is skipped.', // @translate
+                    ['page_id' => $pageId]
+                );
+                continue;
+            }
+
+            // A page is not translated into the language it is written in.
+            if ($langSource !== null
+                && ($langSource === $langTarget || $langSource === strtok($langTarget, '-'))
+            ) {
+                $this->logger->warn(
+                    'Page #{page_id}: the source language is the language of its site, so it is skipped.', // @translate
+                    ['page_id' => $pageId]
+                );
+                continue;
+            }
+
+            $this->translatePage($pageId, (string) $page['title'], $pageId, $langSource, $langTarget);
+        }
+
+        $this->indexPages();
+
+        $this->logPageResults();
+
+        if ($this->quotaExceeded) {
+            $this->logger->warn(
+                'Job aborted: DeepL quota exceeded. Re-run later when quota resets.' // @translate
+            );
+        }
+    }
+
+    /**
+     * Get the title and the site of a page.
+     */
+    protected function pageWithSite(int $pageId): ?array
+    {
+        $row = $this->connection->executeQuery(
+            'SELECT title, site_id FROM site_page WHERE id = :id',
+            ['id' => $pageId],
+            ['id' => ParameterType::INTEGER]
+        )->fetchAssociative();
+
+        return $row ?: null;
+    }
+
+    /**
+     * Get the locale of a site as a language supported as a target.
+     */
+    protected function langTargetOfSite(int $siteId): ?string
+    {
+        $services = $this->getServiceLocator();
+        $locale = $services->get('Omeka\Settings\Site')->get('locale', null, $siteId)
+            ?: ($this->settings->get('locale')
+                ?: $services->get('Config')['translator']['locale']
+                ?: 'en_US');
+        $locale = mb_strtolower(strtr((string) $locale, '_', '-'));
+
+        if (isset(Module::$langsSupportedOutput[$locale])) {
+            return $locale;
+        }
+
+        $short = strtok($locale, '-');
+
+        return Module::$langsSupportedOutputShort[$short][0] ?? null;
     }
 
     /**
@@ -173,6 +332,11 @@ class TranslatePages extends AbstractTranslate
             if ($lang === $langTarget || strtok($lang, '-') === strtok($langTarget, '-')) {
                 $targetSiteIds[] = $siteId;
             }
+        }
+
+        // The sidebar may limit the translation to some sites.
+        if ($this->siteIdsFilter) {
+            $targetSiteIds = array_values(array_intersect($targetSiteIds, $this->siteIdsFilter));
         }
 
         // A site is never a source and a target at the same time.
@@ -208,15 +372,21 @@ class TranslatePages extends AbstractTranslate
         int $sourcePageId,
         string $sourceTitle,
         int $targetPageId,
-        string $langSource,
+        ?string $langSource,
         string $langTarget
     ): void {
+        // When the page is its own source, it is translated in place, so the
+        // hashes are computed on the result and not on the original content:
+        // else the next run would translate the translation.
+        $isSelf = $sourcePageId === $targetPageId;
+
         $sourceBlocks = $this->blocksOfPage($sourcePageId);
         $targetBlocks = $this->blocksOfPage($targetPageId);
 
         // A mirror page has nothing to translate.
         foreach ($targetBlocks as $targetBlock) {
             if ($targetBlock['layout'] === self::LAYOUT_MIRROR) {
+                $this->pageResults[$targetPageId] = 'mirror';
                 return;
             }
         }
@@ -241,13 +411,14 @@ class TranslatePages extends AbstractTranslate
             }
             $parts['block:' . $position] = [
                 'strings' => $strings,
-                'hash' => sha1($sourceBlock['layout'] . "\0" . implode("\0", $strings)),
+                'hash' => $this->hashBlock($sourceBlock['layout'], $strings),
                 'position' => $position,
                 'layout' => $sourceBlock['layout'],
                 'data' => $sourceBlock['data'],
             ];
         }
         if (!$parts) {
+            $this->pageResults[$targetPageId] = 'unchanged';
             return;
         }
 
@@ -263,6 +434,7 @@ class TranslatePages extends AbstractTranslate
             }
         }
         if (!$partsToDo) {
+            $this->pageResults[$targetPageId] = 'unchanged';
             return;
         }
 
@@ -287,6 +459,7 @@ class TranslatePages extends AbstractTranslate
                 [\DeepL\TranslateTextOptions::TAG_HANDLING => 'html']
             );
         if (!$translations) {
+            $this->pageResults[$targetPageId] = 'failed';
             return;
         }
 
@@ -296,7 +469,9 @@ class TranslatePages extends AbstractTranslate
             if ($key === self::KEY_TITLE) {
                 if (isset($translations[$sourceTitle])) {
                     $this->updatePageTitle($targetPageId, $translations[$sourceTitle]);
-                    $done[$key] = $part['hash'];
+                    $done[$key] = $isSelf
+                        ? sha1($translations[$sourceTitle])
+                        : $part['hash'];
                 }
                 continue;
             }
@@ -329,16 +504,94 @@ class TranslatePages extends AbstractTranslate
             $data = $this->pageTexts->replace($part['data'], $translations);
             $this->updateBlockData((int) $targetBlock['id'], $data);
             $this->countBlocks++;
-            $done[$key] = $part['hash'];
+            $done[$key] = $isSelf
+                ? $this->hashBlock($part['layout'], $this->pageTexts->extract($data))
+                : $part['hash'];
         }
 
         if (!$done) {
+            $this->pageResults[$targetPageId] = 'failed';
             return;
         }
+
+        // A part that was not applied leaves the page partly translated.
+        $this->pageResults[$targetPageId] = count($done) < count($partsToDo)
+            ? 'partial'
+            : ($hashes ? 'retranslated' : 'translated');
 
         $this->countPages++;
         $this->pagesToIndex[$targetPageId] = $targetPageId;
         $this->saveHashes($targetPageId, $sourcePageId, $langTarget, array_replace($hashes, $done));
+    }
+
+    /**
+     * Log what happened to each page, in a single entry.
+     *
+     * The totals of the table of the translations are not logged here: the
+     * strings are shared with the values of the resources, so they cannot be
+     * counted by origin and the numbers would be misleading.
+     */
+    protected function logPageResults(): void
+    {
+        $labels = [
+            'translated' => 'translated', // @translate
+            'retranslated' => 'retranslated', // @translate
+            'partial' => 'partly translated', // @translate
+            'unchanged' => 'unchanged', // @translate
+            'mirror' => 'mirror pages skipped', // @translate
+            'failed' => 'failed', // @translate
+        ];
+
+        $counts = array_count_values($this->pageResults);
+
+        $list = [];
+        foreach ($labels as $result => $label) {
+            if (!empty($counts[$result])) {
+                $list[] = sprintf('%d %s', $counts[$result], $this->translate($label));
+            }
+        }
+
+        if (!$list) {
+            $this->logger->notice(
+                'No page was translated.' // @translate
+            );
+            return;
+        }
+
+        $this->logger->notice(
+            'Pages: {list}. {blocks} blocks updated.', // @translate
+            ['list' => implode(', ', $list), 'blocks' => $this->countBlocks]
+        );
+
+        // The pages that need a check are listed, so they can be opened.
+        $issues = array_keys(array_filter(
+            $this->pageResults,
+            fn ($result) => $result === 'failed' || $result === 'partial'
+        ));
+        if ($issues) {
+            $this->logger->warn(
+                'These pages were not fully translated: #{list}.', // @translate
+                ['list' => implode(', #', $issues)]
+            );
+        }
+    }
+
+    /**
+     * Translate a string of the job with the translator of the application.
+     */
+    protected function translate(string $string): string
+    {
+        return $this->getServiceLocator()->get('MvcTranslator')->translate($string);
+    }
+
+    /**
+     * Get the hash of the translatable content of a block.
+     *
+     * @param array $strings The strings of the block, in the order of the keys.
+     */
+    protected function hashBlock(string $layout, array $strings): string
+    {
+        return sha1($layout . "\0" . implode("\0", $strings));
     }
 
     /**
@@ -360,6 +613,18 @@ class TranslatePages extends AbstractTranslate
     /**
      * Get the ids of the pages to process, or an empty array for all of them.
      */
+    /**
+     * Get the ids of the sites to translate into, or an empty array for all.
+     */
+    protected function normalizeSiteIds(): array
+    {
+        $siteIds = $this->getArg('site_ids') ?: [];
+        if (is_string($siteIds)) {
+            $siteIds = preg_split('/\s+/', trim($siteIds)) ?: [];
+        }
+        return array_values(array_unique(array_filter(array_map('intval', (array) $siteIds))));
+    }
+
     protected function normalizePageIds(): array
     {
         $pageIds = $this->getArg('page_ids') ?: [];

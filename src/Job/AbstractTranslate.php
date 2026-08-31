@@ -83,7 +83,7 @@ abstract class AbstractTranslate extends AbstractJob
             ->get('Omeka\Cipher')
             ->decrypt((string) $this->settings->get('translator_deepl_api_key'));
         if (!$deeplApiKey) {
-            $this->logger->err(
+            $this->logger->warn(
                 'No DeepL API key configured.' // @translate
             );
             return null;
@@ -202,19 +202,18 @@ abstract class AbstractTranslate extends AbstractJob
         if (!$translated && !$remaining) {
             return;
         }
-        $this->logger->notice(
-            '--- Session summary ---' // @translate
-        );
+
+        // One log for all the pairs: a log by pair floods the journal with
+        // entries that share the same timestamp and the same reference.
+        $list = [];
         foreach ($translated as $pair => $count) {
-            $this->logger->notice(
-                '{pair}: {translated} translated, {remaining} not translated.', // @translate
-                [
-                    'pair' => $pair,
-                    'translated' => $count,
-                    'remaining' => $remaining[$pair] ?? 0,
-                ]
-            );
+            $list[] = sprintf('%s: %d/%d', $pair, $count, $count + ($remaining[$pair] ?? 0));
         }
+
+        $this->logger->notice(
+            'Session summary, translated by pair of languages: {list}.', // @translate
+            ['list' => implode(' | ', $list)]
+        );
     }
 
     /**
@@ -237,19 +236,20 @@ abstract class AbstractTranslate extends AbstractJob
         if (!$rows) {
             return;
         }
-        $this->logger->notice(
-            '--- Database totals (all sessions) ---' // @translate
-        );
+        $list = [];
         foreach ($rows as $row) {
-            $this->logger->notice(
-                '{source} → {target}: {count} translations stored.', // @translate
-                [
-                    'source' => $row['source_lang'] ?? 'auto',
-                    'target' => $row['target_lang'],
-                    'count' => (int) $row['n'],
-                ]
+            $list[] = sprintf(
+                '%s → %s: %d',
+                $row['source_lang'] ?? 'auto',
+                $row['target_lang'],
+                (int) $row['n']
             );
         }
+
+        $this->logger->notice(
+            'Translations stored in the database, all sessions included: {list}.', // @translate
+            ['list' => implode(' | ', $list)]
+        );
     }
 
     /**

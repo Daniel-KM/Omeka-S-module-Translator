@@ -31,7 +31,7 @@ class TranslateAll extends AbstractTranslate
 
         $pairs = $this->normalizeLanguagePairs();
         if (!$pairs) {
-            $this->logger->err(
+            $this->logger->notice(
                 'No language pairs configured.' // @translate
             );
             return;
@@ -43,7 +43,7 @@ class TranslateAll extends AbstractTranslate
             $propertiesToInclude[] = $sizeInclude;
         }
         if (!$propertiesToInclude) {
-            $this->logger->err(
+            $this->logger->notice(
                 'No properties to translate configured.' // @translate
             );
             return;
@@ -303,7 +303,7 @@ class TranslateAll extends AbstractTranslate
 
         $hasSizeFilter = $sizeIncludeMax !== null || $sizeIncludeMin !== null;
         if (!$includeIds && !$hasSizeFilter) {
-            $this->logger->err(
+            $this->logger->warn(
                 'No resolvable properties to include.' // @translate
             );
             return [];
