@@ -910,9 +910,10 @@ class Module extends AbstractModule
             $type = (string) $value->type();
             $length = mb_strlen($val);
             $lang = (string) $value->lang();
-            // Lang codes for values use "-", not "_".
-            // DeepL input uses short codes without regionalization.
-            $langCode = mb_strtolower((string) strtok($lang, '-'));
+            // Lang codes for values should use "-", but "_" is common, in
+            // particular when values are imported from another tool. DeepL
+            // input uses short codes without regionalization.
+            $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
             // Check exclusion first.
             if (!$val
                 || is_numeric($val)
@@ -1395,12 +1396,13 @@ class Module extends AbstractModule
 
         // Don't translate linked resource, uri without label, numeric data, or
         // invalid lang.
-        // Lang codes for values use "-", not "_".
         $val = (string) $value->value();
         $type = (string) $value->type();
         $lang = (string) $value->lang();
-        // DeepL input uses short codes without regionalization.
-        $langCode = mb_strtolower((string) strtok($lang, '-'));
+        // Lang codes for values should use "-", but "_" is common, in
+        // particular when values are imported from another tool. DeepL input
+        // uses short codes without regionalization.
+        $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
         if (!$val
             || is_numeric($val)
             || $value->valueResource()

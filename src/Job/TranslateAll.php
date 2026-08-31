@@ -358,7 +358,10 @@ class TranslateAll extends AbstractJob
                             $val = (string) $value->value();
                             $type = (string) $value->type();
                             $lang = (string) $value->lang();
-                            $langCode = mb_strtolower((string) strtok($lang, '-'));
+                            // Lang codes for values should use "-", but "_" is
+                            // common, in particular when values are imported
+                            // from another tool.
+                            $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
 
                             if (!$val
                                 || is_numeric($val)
@@ -581,7 +584,9 @@ class TranslateAll extends AbstractJob
             $where[] = 'v.lang IS NOT NULL';
         }
         if ($supportedLangs) {
-            $where[] = '(v.lang IS NULL OR LOWER(SUBSTRING_INDEX(v.lang, \'-\', 1)) IN (:langs))';
+            // Lang codes for values should use "-", but "_" is common, in
+            // particular when values are imported from another tool.
+            $where[] = '(v.lang IS NULL OR LOWER(SUBSTRING_INDEX(REPLACE(v.lang, \'_\', \'-\'), \'-\', 1)) IN (:langs))';
             $params['langs'] = $supportedLangs;
             $types['langs'] = \Doctrine\DBAL\Connection::PARAM_STR_ARRAY;
         }
@@ -618,7 +623,9 @@ class TranslateAll extends AbstractJob
                 continue;
             }
             $lang = (string) ($row['lang'] ?? '');
-            $langCode = mb_strtolower((string) strtok($lang, '-'));
+            // Lang codes for values should use "-", but "_" is common, in
+            // particular when values are imported from another tool.
+            $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
             if (!$langCode && $isSkipEmptyLang) {
                 continue;
             }
