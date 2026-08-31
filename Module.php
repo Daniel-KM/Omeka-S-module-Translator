@@ -2,6 +2,12 @@
 
 namespace Translator;
 
+// Load the module dependencies when installed as a zip.
+// With composer, libraries are stored in omeka vendor/ and the module has none.
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
 if (!class_exists('Common\TraitModule', false)) {
     require_once file_exists(dirname(__DIR__) . '/Common/src/TraitModule.php')
         ? dirname(__DIR__) . '/Common/src/TraitModule.php'
@@ -303,11 +309,6 @@ class Module extends AbstractModule
             'zh-tw',
         ],
     ];
-
-    public function init(ModuleManager $moduleManager): void
-    {
-        require_once __DIR__ . '/vendor/autoload.php';
-    }
 
     protected function preInstall(): void
     {
