@@ -406,12 +406,14 @@ class Module extends AbstractModule
         }
         $settings->set('translator_lang_pairs', $pairs);
 
-        $plugins = $services->get('ControllerPluginManager');
-        $url = $plugins->get('url');
-        $messenger = $plugins->get('messenger');
+        // Use the view helper "url", not the controller plugin: the plugin
+        // requires a controller, so it throws an exception when the module is
+        // installed from the command line, in particular during tests.
+        $url = $services->get('ViewHelperManager')->get('url');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addWarning((new PsrMessage(
             'Fill your DeepL api key, then set languages to translate in {link}main settings{link_end}.', // @translate
-            ['link' => sprintf('<a href="%s">', htmlspecialchars($url->fromRoute('admin/default', ['controller' => 'setting'], ['fragment' => 'translator']))), 'link_end' => '</a>']
+            ['link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'translator']))), 'link_end' => '</a>']
         ))->setEscapeHtml(false));
     }
 
