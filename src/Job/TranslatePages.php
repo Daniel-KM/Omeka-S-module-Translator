@@ -130,11 +130,25 @@ class TranslatePages extends AbstractTranslate
             return;
         }
 
-        // The mode "self" translates the pages in place, into the locale of
-        // their own site, without any relation nor site group: it is used for a
-        // page that is not a copy, or that was never translated.
-        if ($this->getArg('mode') === self::MODE_SELF) {
-            $this->translatePagesInPlace($this->normalizePageIds());
+        $pageIds = $this->normalizePageIds();
+        $this->siteIdsFilter = $this->normalizeSiteIds();
+
+        // A page whose own site is selected is translated in place, into the
+        // locale of that site: it is not a copy, or it was never translated.
+        // The other selected sites get the translation of their related page.
+        // Both are done by the same job, so a single task is dispatched.
+        $pageIdsInPlace = $this->getArg('mode') === self::MODE_SELF
+            ? $pageIds
+            : $this->pageIdsOfOwnSites($pageIds);
+        if ($pageIdsInPlace) {
+            $this->translatePagesInPlace($pageIdsInPlace);
+        }
+
+        // Only the own site was selected: there is no copy to update.
+        $siteIdsRelated = array_values(array_diff($this->siteIdsFilter, $this->ownSiteIds($pageIds)));
+        if ($this->siteIdsFilter && !$siteIdsRelated) {
+            $this->indexPages();
+            $this->logPageResults();
             return;
         }
 
@@ -161,9 +175,6 @@ class TranslatePages extends AbstractTranslate
             );
             return;
         }
-
-        $pageIds = $this->normalizePageIds();
-        $this->siteIdsFilter = $this->normalizeSiteIds();
 
         $this->logger->notice(
             'Starting translation of the pages of {count} site groups.', // @translate
@@ -267,16 +278,46 @@ class TranslatePages extends AbstractTranslate
 
             $this->translatePage($pageId, (string) $page['title'], $pageId, $langSource, $langTarget);
         }
+    }
 
-        $this->indexPages();
-
-        $this->logPageResults();
-
-        if ($this->quotaExceeded) {
-            $this->logger->warn(
-                'Job aborted: DeepL quota exceeded. Re-run later when quota resets.' // @translate
-            );
+    /**
+     * Get the ids of the sites of a list of pages.
+     *
+     * @return int[]
+     */
+    protected function ownSiteIds(array $pageIds): array
+    {
+        if (!$pageIds) {
+            return [];
         }
+
+        $rows = $this->connection->executeQuery(
+            'SELECT DISTINCT site_id FROM site_page WHERE id IN (:ids)',
+            ['ids' => $pageIds],
+            ['ids' => Connection::PARAM_INT_ARRAY]
+        )->fetchFirstColumn();
+
+        return array_map('intval', $rows);
+    }
+
+    /**
+     * Get the pages whose own site is one of the selected sites.
+     *
+     * @return int[]
+     */
+    protected function pageIdsOfOwnSites(array $pageIds): array
+    {
+        if (!$pageIds || !$this->siteIdsFilter) {
+            return [];
+        }
+
+        $rows = $this->connection->executeQuery(
+            'SELECT id FROM site_page WHERE id IN (:ids) AND site_id IN (:sites)',
+            ['ids' => $pageIds, 'sites' => $this->siteIdsFilter],
+            ['ids' => Connection::PARAM_INT_ARRAY, 'sites' => Connection::PARAM_INT_ARRAY]
+        )->fetchFirstColumn();
+
+        return array_map('intval', $rows);
     }
 
     /**
@@ -460,6 +501,25 @@ class TranslatePages extends AbstractTranslate
             );
         if (!$translations) {
             $this->pageResults[$targetPageId] = 'failed';
+            return;
+        }
+
+        // A translation identical to its source changes nothing. It happens
+        // when the page is already written in the target language, in
+        // particular when the source language is detected and not selected.
+        // The hashes are stored anyway, so the service is not queried again.
+        $translations = array_filter(
+            $translations,
+            fn ($translation, $string) => $translation !== $string,
+            ARRAY_FILTER_USE_BOTH
+        );
+        if (!$translations) {
+            $unchanged = [];
+            foreach ($partsToDo as $key => $part) {
+                $unchanged[$key] = $part['hash'];
+            }
+            $this->saveHashes($targetPageId, $sourcePageId, $langTarget, array_replace($hashes, $unchanged));
+            $this->pageResults[$targetPageId] = 'unchanged';
             return;
         }
 
