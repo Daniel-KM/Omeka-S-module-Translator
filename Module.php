@@ -797,6 +797,31 @@ class Module extends AbstractModule
     }
 
     /**
+     * Normalize the lang of a value into a lang code usable as DeepL input.
+     *
+     * The lang of a value may use "_" instead of "-", may contain a region, and
+     * may be a two or three letters code, bibliographic or terminologic,
+     * whereas DeepL uses mainly two letters codes without region.
+     *
+     * The code is returned as is when it cannot be converted, so the caller can
+     * still check it against self::$langsSupportedInput and distinguish it from
+     * a value without lang.
+     *
+     * @return string An empty string when the value has no lang.
+     */
+    public static function normalizeLangCode(?string $lang): string
+    {
+        // Lang codes for values should use "-", but "_" is common, in
+        // particular when values are imported from another tool.
+        $langCode = mb_strtolower((string) strtok(strtr((string) $lang, '_', '-'), '-'));
+        if ($langCode === '' || isset(self::$langsSupportedInput[$langCode])) {
+            return $langCode;
+        }
+
+        return \Iso639p3\Iso639p3::code2letters($langCode) ?: $langCode;
+    }
+
+    /**
      * Get the list of translatable values for each language pair.
      *
      * @return array Associative array with pair as key, and array of arrays as
@@ -910,10 +935,7 @@ class Module extends AbstractModule
             $type = (string) $value->type();
             $length = mb_strlen($val);
             $lang = (string) $value->lang();
-            // Lang codes for values should use "-", but "_" is common, in
-            // particular when values are imported from another tool. DeepL
-            // input uses short codes without regionalization.
-            $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
+            $langCode = self::normalizeLangCode($lang);
             // Check exclusion first.
             if (!$val
                 || is_numeric($val)
@@ -1399,10 +1421,7 @@ class Module extends AbstractModule
         $val = (string) $value->value();
         $type = (string) $value->type();
         $lang = (string) $value->lang();
-        // Lang codes for values should use "-", but "_" is common, in
-        // particular when values are imported from another tool. DeepL input
-        // uses short codes without regionalization.
-        $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
+        $langCode = self::normalizeLangCode($lang);
         if (!$val
             || is_numeric($val)
             || $value->valueResource()

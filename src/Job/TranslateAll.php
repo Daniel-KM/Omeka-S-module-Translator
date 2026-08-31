@@ -358,10 +358,7 @@ class TranslateAll extends AbstractJob
                             $val = (string) $value->value();
                             $type = (string) $value->type();
                             $lang = (string) $value->lang();
-                            // Lang codes for values should use "-", but "_" is
-                            // common, in particular when values are imported
-                            // from another tool.
-                            $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
+                            $langCode = Module::normalizeLangCode($lang);
 
                             if (!$val
                                 || is_numeric($val)
@@ -520,7 +517,16 @@ class TranslateAll extends AbstractJob
             return [];
         }
 
+        // Values may use a three letters code, bibliographic or terminologic,
+        // whereas DeepL uses mainly two letters codes, so append all variants.
         $supportedLangs = array_keys(Module::$langsSupportedInput);
+        $variants = [];
+        foreach ($supportedLangs as $lang) {
+            foreach (\Iso639p3\Iso639p3::codes($lang) as $variant) {
+                $variants[$variant] = $variant;
+            }
+        }
+        $supportedLangs = array_values(array_unique(array_merge($supportedLangs, array_values($variants))));
 
         $where = [
             'v.value IS NOT NULL',
@@ -623,9 +629,7 @@ class TranslateAll extends AbstractJob
                 continue;
             }
             $lang = (string) ($row['lang'] ?? '');
-            // Lang codes for values should use "-", but "_" is common, in
-            // particular when values are imported from another tool.
-            $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
+            $langCode = Module::normalizeLangCode($lang);
             if (!$langCode && $isSkipEmptyLang) {
                 continue;
             }
