@@ -22,7 +22,7 @@
         "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-Translator/-/issues",
         "forum": "https://forum.omeka.org/"
     },
-    "_require (not set until Omeka S merges PR #2412)": {
+    "_require (not set until Omeka S merges PR #2432)": {
         "omeka/omeka-s": "^4.0",
         "daniel-km/omeka-s-module-common": "*"
     },
@@ -30,12 +30,7 @@
         "deeplcom/deepl-php": "^1.16",
         "symfony/http-client": "^6.4",
         "nyholm/psr7": "^1.8",
-        "daniel-km/simple-iso-639-3": "^0.2.2"
-    },
-    "provide": {
-        "psr/log": "*",
-        "symfony/deprecation-contracts": "*",
-        "symfony/service-contracts": "*"
+        "daniel-km/simple-iso-639-3": "^0.3"
     },
     "autoload": {
         "psr-4": {
@@ -58,9 +53,5 @@
     "extra": {
         "installer-name": "Translator",
         "configurable": true
-    },
-    "provide": {
-        "psr/container": "*",
-        "symfony/polyfill-php80": "*"
     }
 }
