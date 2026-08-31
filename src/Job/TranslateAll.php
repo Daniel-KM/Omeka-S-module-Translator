@@ -74,7 +74,7 @@ class TranslateAll extends AbstractJob
         $referenceIdProcessor->setReferenceId('translator/translate-all/job_' . $this->job->getId());
         $this->logger->addProcessor($referenceIdProcessor);
 
-        $deeplApiKey = $this->settings->get('translator_deepl_api_key');
+        $deeplApiKey = $services->get('Omeka\Cipher')->decrypt((string) $this->settings->get('translator_deepl_api_key'));
         if (!$deeplApiKey) {
             $this->logger->err(
                 'No DeepL API key configured.' // @translate
@@ -949,7 +949,7 @@ class TranslateAll extends AbstractJob
     ): array {
         $services = $this->getServiceLocator();
 
-        $deeplApiKey = $this->settings->get('translator_deepl_api_key');
+        $deeplApiKey = $services->get('Omeka\Cipher')->decrypt((string) $this->settings->get('translator_deepl_api_key'));
         if (!$deeplApiKey) {
             return [];
         }

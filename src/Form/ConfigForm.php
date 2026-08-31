@@ -2,7 +2,7 @@
 
 namespace Translator\Form;
 
-use Laminas\Form\Element;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Form;
 
 class ConfigForm extends Form
@@ -12,7 +12,7 @@ class ConfigForm extends Form
         $this
             ->add([
                 'name' => 'translator_deepl_api_key',
-                'type' => Element\Text::class,
+                'type' => CommonElement\Secret::class,
                 'options' => [
                     'label' => 'DeepL api key for automatic translation', // @translate
                 ],

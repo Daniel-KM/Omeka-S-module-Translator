@@ -21,7 +21,7 @@ class TranslateResources extends AbstractJob
         $logger = $services->get('Omeka\Logger');
         $settings = $services->get('Omeka\Settings');
 
-        $deeplApiKey = $settings->get('translator_deepl_api_key');
+        $deeplApiKey = $services->get('Omeka\Cipher')->decrypt((string) $settings->get('translator_deepl_api_key'));
         if (!$deeplApiKey) {
             return;
         }
