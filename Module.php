@@ -811,14 +811,23 @@ class Module extends AbstractModule
      */
     public static function normalizeLangCode(?string $lang): string
     {
-        // Lang codes for values should use "-", but "_" is common, in
-        // particular when values are imported from another tool.
-        $langCode = mb_strtolower((string) strtok(strtr((string) $lang, '_', '-'), '-'));
-        if ($langCode === '' || isset(self::$langsSupportedInput[$langCode])) {
-            return $langCode;
+        // The method is called for each value, but the langs are few, and
+        // code2letters() loops on the 8120 codes, so cache the results.
+        static $cache = [];
+
+        $lang = (string) $lang;
+        if (isset($cache[$lang])) {
+            return $cache[$lang];
         }
 
-        return \Iso639p3\Iso639p3::code2letters($langCode) ?: $langCode;
+        // Lang codes for values should use "-", but "_" is common, in
+        // particular when values are imported from another tool.
+        $langCode = mb_strtolower((string) strtok(strtr($lang, '_', '-'), '-'));
+        if ($langCode !== '' && !isset(self::$langsSupportedInput[$langCode])) {
+            $langCode = \Iso639p3\Iso639p3::code2letters($langCode) ?: $langCode;
+        }
+
+        return $cache[$lang] = $langCode;
     }
 
     /**
