@@ -14,8 +14,8 @@ Translations can be stored directly as value in resources for specific
 properties, or stored in a decontextualized way in the database, so translation
 can be used anywhere. Multiple translations can be made for each source string.
 
-Some features are not yet available: translation of site page blocks and storage
-of translated values in resource itself. See todo below.
+Some features are not yet available: storage of translated values in resource
+itself. See todo below.
 
 See the list of [supported languages by DeepL].
 
@@ -70,6 +70,74 @@ language is not set, it will set as the language set in the previous setting,
 else the translator service will do an autodetection, that is generally not
 recommended with short strings.
 
+### Site pages of a multilingual site group
+
+A multilingual site is built with the module [Internationalisation]: a group
+gathers one site by language, and the pages of the main site are copied into the
+other sites of the group, that keep the relations between the copies.
+
+So a copied page contains the same blocks as the original one, and this module
+translates them in place: the strings are stored in the page itself, so the site
+displays them without any specific process, and a user can correct them
+directly.
+
+The direction of the translation is the one of the pairs of languages set above:
+for a pair `fr = en-gb`, the pages of the sites of a group whose locale is
+French are translated into the pages of the sites of the same group whose locale
+is British English. **Only the pairs with an explicit source language are used**:
+without it, the original site of a group would be unknown.
+
+A page duplicated as a mirror page is never translated: it displays the original
+page, so it has no string of its own.
+
+The data of a block is a free json, so there is no way to know which keys
+contain a text for the end user and which ones contain a setting, an id, a
+template name or a query. So the keys to translate are listed in the main
+settings, one by line, for example "html" or "heading". They are searched
+recursively, so the attachments and the grouped blocks are managed. The special
+key "page_title" translates the title of the pages themselves. The blocks of
+some layouts can be skipped with the second setting.
+
+The blocks of a copy are rebuilt from the blocks of the original page, matched
+by position, so they follow its structure, and only the configured keys are
+translated. The strings that contain some html are sent to the translation
+service with the option of tag handling, so the tags are kept.
+
+To avoid to translate the same block again and again, and to avoid to overwrite
+the corrections made by a user, a hash of the original content is stored for
+each copy in the table `translate_page`: a block is processed only when the
+original text changed. So the job can be run as often as needed.
+
+The keys of the blocks to translate are set with a default list when the module
+is installed or upgraded, so the pages are managed without any configuration.
+Check them in the main settings: without them, nothing is translated.
+
+#### Translation of a single page
+
+The job translates all the pages of all the groups, but a page can be
+translated alone from the list of the pages of a site, with the module
+[Internationalisation]: the action `Translate` opens a sidebar with one checkbox
+by site, all checked, so some sites can be skipped.
+
+The site of the page itself is the first checkbox and does something different:
+the page is translated **in place**, into the locale of its own site. It is used
+for a page that was never translated, or that is written in another language
+than the one of its site, in particular a copy that was created but not
+translated. The language of the page can be selected among the languages of the
+sites, or detected by the translation service, that is less reliable with short
+strings.
+
+A page written in the language of its own site is not modified: when the
+translation of a string is identical to it, nothing is written and the hashes
+are stored anyway, so the service is not queried again.
+
+The job is launched from the main settings for all the pages. The copies of a
+page are translated automatically when it is created or saved too.
+
+The result of each page is logged in a single summary: translated,
+retranslated, partly translated, unchanged, mirror page skipped or failed. The
+pages that were not fully translated are listed apart, so they can be checked.
+
 
 TODO
 ----
@@ -79,9 +147,10 @@ TODO
 - [ ] Finalize manual translation; use a tab in resource and a specific menu (see AiGenerator).
 - [ ] Store of translated values in resource itself.
 - [ ] Use resource template to define properties to translate instead of the main settings.
-- [ ] Translation of site page blocks.
+- [x] Translation of site page blocks of the copied pages of a site group.
+- [ ] Translation of the labels of the navigation of the sites.
 - [ ] Add options of DeepL Api.
-- [ ] Translate html and xml and manage their options.
+- [ ] Translate html and xml of the values and manage their options (done for the page blocks).
 - [ ] Add template form to store values or not.
 - [ ] Add to api. See https://www.w3.org/TR/json-ld/#language-indexing
 - [ ] See https://packagist.org/packages/boxblinkracer/phpunuhi, a framework to validate and manage translations.
@@ -148,16 +217,17 @@ completed for the [Musée de Bretagne].
 [DeepL]: https://www.deepl.com
 [supported languages by DeepL]: https://developers.deepl.com/docs/getting-started/supported-languages
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
+[Internationalisation]: https://gitlab.com/Daniel-KM/Omeka-S-module-Internationalisation
 [installing a module]: https://omeka.org/s/docs/user-manual/modules
 [deepl-php]: https://packagist.org/packages/deeplcom/deepl-php
-[Translator.zip]: https://github.com/Daniel-KM/Omeka-S-module-Translator/releases
+[Translator.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Translator/-/releases
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-Translator/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
 [Curiothèque]: https://curiotheque.musee.curie.fr/
-[Musée curie]: https://musee.curie.fr
+[Musée Curie]: https://musee.curie.fr
 [Musée de Bretagne]: https://collections.musee-bretagne.fr
 [GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
