@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-31 00:00+0000\n"
+"POT-Creation-Date: 2026-11-09 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,14 +17,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/scripts/upgrade.php:38 data/scripts/upgrade.php:49 Module.php:345
+#: data/scripts/upgrade.php:39 data/scripts/upgrade.php:50 Module.php:345
 #: Module.php:355
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
-#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:53
-#: data/scripts/upgrade.php:62
+#: data/scripts/upgrade.php:43 data/scripts/upgrade.php:54
+#: data/scripts/upgrade.php:63
 msgid "Missing requirement. Unable to upgrade."
 msgstr ""
 
@@ -33,28 +33,35 @@ msgstr ""
 msgid "This version of module %1$s requires a version of php ≥ %2$s."
 msgstr ""
 
-#: data/scripts/upgrade.php:58
+#: data/scripts/upgrade.php:59
 msgid "This version of module {module} requires a version of php ≥ {version}."
 msgstr ""
 
-#: data/scripts/upgrade.php:83
+#: data/scripts/upgrade.php:84
 msgid "Setting \"{key}\" was split into \"{key}\" + \"{key}_size\"."
 msgstr ""
 
-#: data/scripts/upgrade.php:101
+#: data/scripts/upgrade.php:102
 msgid ""
 "The keys of the page blocks to translate were set with the default ones. "
 "Check them in the main settings."
 msgstr ""
 
-#: data/scripts/upgrade.php:145
+#: data/scripts/upgrade.php:146
 msgid ""
 "The foreign key \"{name}\" of the table \"translate_page\" could not be "
 "created: {message}"
 msgstr ""
 
-#: data/scripts/upgrade.php:154
+#: data/scripts/upgrade.php:155
 msgid "It is now possible to translate site pages individually."
+msgstr ""
+
+#: data/scripts/upgrade.php:163
+msgid ""
+"The optional module {link}Job Queue{link_end} can be installed to avoid "
+"running the same background jobs several times in parallel and to limit the "
+"number of heavy jobs running at the same time."
 msgstr ""
 
 #: Module.php:417

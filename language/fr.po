@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-31 00:00+0000\n"
-"PO-Revision-Date: 2026-08-31 00:00+0000\n"
+"POT-Creation-Date: 2026-11-09 00:00+0000\n"
+"PO-Revision-Date: 2026-11-09 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: French <kde-i18n-doc@kde.org>\n"
 "Language: fr\n"
@@ -13,14 +13,14 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 3.6\n"
 
-#: data/scripts/upgrade.php:38 data/scripts/upgrade.php:49 Module.php:345
+#: data/scripts/upgrade.php:39 data/scripts/upgrade.php:50 Module.php:345
 #: Module.php:355
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
 
-#: data/scripts/upgrade.php:42 data/scripts/upgrade.php:53
-#: data/scripts/upgrade.php:62
+#: data/scripts/upgrade.php:43 data/scripts/upgrade.php:54
+#: data/scripts/upgrade.php:63
 msgid "Missing requirement. Unable to upgrade."
 msgstr "Pré-requis absent. Impossible de mettre à jour."
 
@@ -29,15 +29,15 @@ msgstr "Pré-requis absent. Impossible de mettre à jour."
 msgid "This version of module %1$s requires a version of php ≥ %2$s."
 msgstr "Cette version du module %1$s requiert une version de php ≥ %2$s."
 
-#: data/scripts/upgrade.php:58
+#: data/scripts/upgrade.php:59
 msgid "This version of module {module} requires a version of php ≥ {version}."
 msgstr "La version du module {module} requiert une version de php ≥ {version}."
 
-#: data/scripts/upgrade.php:83
+#: data/scripts/upgrade.php:84
 msgid "Setting \"{key}\" was split into \"{key}\" + \"{key}_size\"."
 msgstr "Le paramètre \"{key}\" a été séparé en \"{key}\" + \"{key}_size\"."
 
-#: data/scripts/upgrade.php:101
+#: data/scripts/upgrade.php:102
 msgid ""
 "The keys of the page blocks to translate were set with the default ones. "
 "Check them in the main settings."
@@ -45,7 +45,7 @@ msgstr ""
 "Les clés des blocs de page à traduire ont été définies avec les valeurs par "
 "défaut. Vérifiez-les dans les paramètres généraux."
 
-#: data/scripts/upgrade.php:145
+#: data/scripts/upgrade.php:146
 msgid ""
 "The foreign key \"{name}\" of the table \"translate_page\" could not be "
 "created: {message}"
@@ -53,9 +53,19 @@ msgstr ""
 "La clé étrangère \"{name}\" de la table \"translate_page\" ne peut pas être "
 "créée : {message}"
 
-#: data/scripts/upgrade.php:154
+#: data/scripts/upgrade.php:155
 msgid "It is now possible to translate site pages individually."
 msgstr "Il est désormais possible de traduire les pages individuellement."
+
+#: data/scripts/upgrade.php:163
+msgid ""
+"The optional module {link}Job Queue{link_end} can be installed to avoid "
+"running the same background jobs several times in parallel and to limit the "
+"number of heavy jobs running at the same time."
+msgstr ""
+"Le module optionnel {link}Job Queue{link_end} peut être installé pour éviter "
+"que les mêmes tâches en arrière-plan ne s'exécutent en parallèle et pour "
+"limiter les grosses tâches simultanées."
 
 #: Module.php:417
 msgid ""
