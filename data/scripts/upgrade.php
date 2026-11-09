@@ -22,7 +22,8 @@ use Common\Stdlib\PsrMessage;
  * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
  */
 $plugins = $services->get('ControllerPluginManager');
-$url = $plugins->get('url');
+$helpers = $services->get('ViewHelperManager');
+$url = $helpers->get('url');
 $api = $plugins->get('api');
 $logger = $services->get('Omeka\Logger');
 $settings = $services->get('Omeka\Settings');
@@ -44,10 +45,10 @@ if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActi
 
 // The module Mapper embeds the same library "simple-iso-639-3" and its
 // autoloader may win, so an older version breaks the languages here.
-if ($this->isModuleActive('Mapper') && !$this->isModuleVersionAtLeast('Mapper', '3.4.9')) {
+if ($this->isModuleActive('Mapper') && !$this->isModuleVersionAtLeast('Mapper', '3.4.10')) {
     $message = new \Omeka\Stdlib\Message(
         $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-        'Mapper', '3.4.9'
+        'Mapper', '3.4.10'
     );
     $messenger->addError($message);
     throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
@@ -154,4 +155,15 @@ if (version_compare((string) $oldVersion, '3.4.5', '<')) {
         'It is now possible to translate site pages individually.' // @translate
     );
     $messenger->addSuccess($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.7', '<')) {
+    if (!$this->isModuleActive('JobQueue')) {
+        $message = new PsrMessage(
+            'The optional module {link}Job Queue{link_end} can be installed to avoid running the same background jobs several times in parallel and to limit the number of heavy jobs running at the same time.', // @translate
+            ['link' => '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-JobQueue" target="_blank" rel="noopener">', 'link_end' => '</a>']
+        );
+        $message->setEscapeHtml(false);
+        $messenger->addNotice($message);
+    }
 }
