@@ -34,6 +34,9 @@ See general end user documentation for [installing a module].
 
 The module [Common] must be installed first.
 
+With big bases or on shared hosts, it is recommended to install the optional
+module [Job Queue] to avoid to overload the server when indexing data.
+
 The module uses an external library, [deepl-php], so use the release zip to
 install it, or use and init the source.
 
@@ -229,5 +232,6 @@ completed for the [Musée de Bretagne].
 [Curiothèque]: https://curiotheque.musee.curie.fr/
 [Musée Curie]: https://musee.curie.fr
 [Musée de Bretagne]: https://collections.musee-bretagne.fr
+[Job Queue]: https://gitlab.com/Daniel-KM/Omeka-S-module-JobQueue
 [GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
