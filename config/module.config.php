@@ -68,4 +68,17 @@ return [
             'translator_lang_fallbacks' => [],
         ],
     ],
+    // Rules of the background jobs for the module Job Queue, used only when it
+    // is installed: merge the jobs dispatched again before they start and limit
+    // the number of heavy jobs running at the same time.
+    'jobqueue' => [
+        'jobs' => [
+            'Translator\Job\TranslatePages' => [
+                'merge' => ['page_ids'],
+            ],
+            'Translator\Job\TranslateResources' => [
+                'merge' => ['refs'],
+            ],
+        ],
+    ],
 ];
